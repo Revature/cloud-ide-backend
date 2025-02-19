@@ -1,13 +1,12 @@
 from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field
+from app.models.mixins import TimestampMixin
 
-class Image(SQLModel, table=True):
+class Image(TimestampMixin, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     description: str
     identifier: str
-    modified_on: datetime = Field(default_factory=datetime.utcnow)
     modified_by: str = Field(default="")
-    created_on: datetime = Field(default_factory=datetime.utcnow)
     created_by: str = Field(default="")
