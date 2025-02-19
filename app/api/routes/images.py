@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session, select
 from app.db.database import get_session
 from app.models.image import Image
@@ -24,6 +24,28 @@ def read_images(session: Session = Depends(get_session)):
     images = session.exec(select(Image)).all()
     return images
 
+@router.post("/authentication_test", status_code=status.HTTP_201_CREATED)
+async def authentication_test(
+    request: Request, 
+    session: Session = Depends(get_session)
+):
+    """
+    Print all details from the incoming request.
+    """
+    # Print headers and query parameters
+    print("Headers:", request.headers)
+    print("Query Parameters:", request.query_params)
+
+    # Try to read the JSON body, if any
+    try:
+        body = await request.json()
+    except Exception:
+        body = None
+    print("Body:", body)
+
+    # Optionally, return a simple confirmation response
+    return {"detail": "Authentication test: parameters printed to console."}
+            
 @router.get("/{image_id}", response_model=Image)
 def read_image(image_id: int, session: Session = Depends(get_session)):
     """
