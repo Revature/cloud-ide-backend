@@ -1,5 +1,5 @@
 import os
-from sqlmodel import SQLModel, create_engine
+from sqlmodel import SQLModel, create_engine, Session
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -14,4 +14,9 @@ engine = create_engine(DATABASE_URL, echo=True)
 def create_db_and_tables():
     # Import all models so that they are registered with SQLModel metadata
     from app.models import user, machine, image, runner
+    SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
+    
+def get_session():
+    with Session(engine) as session:
+        yield session

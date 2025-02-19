@@ -3,12 +3,12 @@ from datetime import datetime
 from sqlmodel import SQLModel, Field
 from app.models.mixins import TimestampMixin
 
-class Machine(TimestampMixin, SQLModel, table=True):
+class Script(TimestampMixin, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    identifier: str
-    cpu_count: int
-    memory_size: int
-    storage_size: int
+    description: str
+    event: str
+    image_id: int = Field(foreign_key="image.id")
+    script: str
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
