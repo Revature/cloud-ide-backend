@@ -1,0 +1,4 @@
+fastapi
+sqlmodel
+pymysql 
+python-dotenv

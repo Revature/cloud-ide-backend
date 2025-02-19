@@ -2,11 +2,16 @@ from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field
 
-class User(SQLModel, table=True):
+class Runner(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    first_name: str
-    last_name: str
-    email: str
+    machine_id: int = Field(foreign_key="machine.id")
+    image_id: int = Field(foreign_key="image.id")
+    user_id: int = Field(foreign_key="user.id")
+    state: str
+    pool_status: str
+    url: str
+    started_on: datetime
+    ended_on: Optional[datetime] = None
     modified_on: datetime = Field(default_factory=datetime.utcnow)
     modified_by: str = Field(default="")
     created_on: datetime = Field(default_factory=datetime.utcnow)
