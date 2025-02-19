@@ -1,4 +1,5 @@
 fastapi
 sqlmodel
-pymysql
+pymysql 
 python-dotenv
+boto3
