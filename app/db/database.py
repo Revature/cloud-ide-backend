@@ -13,7 +13,7 @@ engine = create_engine(DATABASE_URL, echo=True)
 
 def create_db_and_tables():
     # Import all models so that they are registered with SQLModel metadata
-    from app.models import user, machine, image, runner
+    from app.models import user, machine, image, runner, role, user_role, script, runner_history
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
     

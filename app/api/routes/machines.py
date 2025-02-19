@@ -34,7 +34,7 @@ def read_machine(machine_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Machine not found")
     return machine
   
-@route.patch("/{machine_id}", response_model=Machine)
+@router.patch("/{machine_id}", response_model=Machine)
 def update_machine(machine_id: int, updated_machine: Machine, session: Session = Depends(get_session)):
     """
     Update an existing Machine record.
@@ -53,3 +53,16 @@ def update_machine(machine_id: int, updated_machine: Machine, session: Session =
     session.commit()
     session.refresh(machine)
     return machine
+  
+@router.delete("/{machine_id}", status_code=status.HTTP_200_OK)
+def delete_machine(machine_id: int, session: Session = Depends(get_session)):
+    """
+    Delete a Machine record.
+    """
+    machine = session.get(Machine, machine_id)
+    if not machine:
+        raise HTTPException(status_code=404, detail="Machine not found")
+    
+    session.delete(machine)
+    session.commit()
+    return None

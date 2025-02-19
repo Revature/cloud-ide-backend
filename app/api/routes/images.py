@@ -55,7 +55,7 @@ def update_image(image_id: int, updated_image: Image, session: Session = Depends
     session.refresh(image)
     return image
 
-@router.delete("/{image_id}", status_code=status.HTTP_200)
+@router.delete("/{image_id}", status_code=status.HTTP_200_OK)
 def delete_image(image_id: int, session: Session = Depends(get_session)):
     """
     Delete an Image record.

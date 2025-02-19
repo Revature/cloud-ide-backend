@@ -10,7 +10,6 @@ class Runner(TimestampMixin, SQLModel, table=True):
     image_id: int = Field(foreign_key="image.id")
     user_id: int = Field(foreign_key="user.id")
     state: str
-    pool_status: str
     url: str
     token: str
     external_hash: str

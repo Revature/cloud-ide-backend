@@ -5,6 +5,7 @@ from sqlalchemy import Column, JSON
 from app.models.mixins import TimestampMixin
 
 class RunnerHistory(TimestampMixin, SQLModel, table=True):
+    __tablename__ = "runner_history" 
     id: Optional[int] = Field(default=None, primary_key=True)
     runner_id: int = Field(foreign_key="runner.id")
     event_name: str
