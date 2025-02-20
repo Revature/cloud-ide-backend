@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
-from app.db.database import create_db_and_tables
+from db.database import create_db_and_tables
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -17,3 +17,4 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/")
 def read_root():
     return {"message": "Hello world!"}
+
