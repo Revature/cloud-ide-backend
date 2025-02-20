@@ -163,12 +163,19 @@ async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
         except Exception as e:
             return str(e)
 
-async def main():
-    print('Running...')
-    res = await Get_S3_Object('revature-dev-01092022','batch_curriculum_v2_contents/0ea30ce73ff6dfeca0878c07cfc9474a.txt')
-    print(res)
+# async def main():
+#     print('Running...')
+#     res = await Get_S3_Object('revature-dev-01092022','batch_curriculum_v2_contents/0ea30ce73ff6dfeca0878c07cfc9474a.txt')
+#     print(res)
 
-asyncio.run(main())
+# asyncio.run(main())
 
-'batch_curriculum_v2_contents/0ea30ce73ff6dfeca0878c07cfc9474a.txt'
-'revature-dev-01092022'
+# 'batch_curriculum_v2_contents/0ea30ce73ff6dfeca0878c07cfc9474a.txt'
+# 'revature-dev-01092022'
+
+# This is a synchronous function that will block until the instance is running. We can use this to wait for the instance to be running before we update the runner's state in the database.
+    
+def wait_for_instance_running(instance_id: str, region: str = "us-west-2") -> None:
+    ec2 = boto3.client("ec2", region_name=region)
+    waiter = ec2.get_waiter("instance_running")
+    waiter.wait(InstanceIds=[instance_id])

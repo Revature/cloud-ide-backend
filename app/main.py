@@ -9,10 +9,7 @@ from app.api.main import api_router
 import uuid
 
 # Import your models
-from app.models.image import Image
-from app.models.machine import Machine
-from app.models.runner import Runner
-from app.models.user import User
+from app.models import Machine, Image, Runner, User
 
 # Import your AWS functions
 from app.business.aws import Create_New_EC2, Describe_EC2, Stop_EC2, Terminate_EC2
@@ -58,6 +55,8 @@ async def lifespan(app: FastAPI):
             session.add(db_image)
             session.commit()
             session.refresh(db_image)
+            
+        print(f"Image ID: {db_image.id}")
 
         # -- Create (or fetch) default Machine --
         stmt_machine = select(Machine).where(Machine.identifier == "default-machine")
@@ -75,16 +74,20 @@ async def lifespan(app: FastAPI):
             session.add(db_machine)
             session.commit()
             session.refresh(db_machine)
+        
+        print(f"Machine ID: {db_machine.id}")
             
         # add machine to image
         db_image.machine_id = db_machine.id
         session.commit()
 
+        print(f"Image ID: {db_image.id} has Machine ID: {db_image.machine_id}")
+        
         # 2) Launch multiple EC2 instances based on runner_pool_size
         for _ in range(db_image.runner_pool_size):
             instance_id = await Create_New_EC2(
                 ImageId=db_image.identifier,  # e.g. "ami-0f9f85e9aeb20148"
-                InstanceType = db_image.machine.identifier if db_image.machine else "t2.medium",
+                InstanceType = db_machine.identifier,
                 InstanceCount=1
             )
             launched_instance_ids.append(instance_id)

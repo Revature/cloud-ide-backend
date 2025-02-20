@@ -1,7 +1,9 @@
-from typing import Optional, Dict, Any, List
+from __future__ import annotations
+from typing import Optional, Dict, Any
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, JSON
+from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 
 class Runner(TimestampMixin, SQLModel, table=True):
@@ -25,8 +27,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
     created_by: str = Field(default="")
 
     # Relationships
-    machine: "Machine" = Relationship(back_populates="runners")
-    image: "Image" = Relationship(back_populates="runners")
-    user: "User" = Relationship(back_populates="runners")
-    runner_histories: List["RunnerHistory"] = Relationship(back_populates="runner")
-    
+    # machine: Mapped["Machine"] = Relationship(back_populates="runners")
+    # image: Mapped["Image"] = Relationship(back_populates="runners")
+    # user: Mapped["User"] = Relationship(back_populates="runners")
+    # runner_histories: Mapped[List["RunnerHistory"]] = Relationship(back_populates="runner")

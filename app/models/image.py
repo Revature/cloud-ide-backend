@@ -1,6 +1,8 @@
+from __future__ import annotations
 from typing import List, Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 
 class Image(TimestampMixin, SQLModel, table=True):
@@ -14,6 +16,6 @@ class Image(TimestampMixin, SQLModel, table=True):
     created_by: str = Field(default="")
 
     # Relationships
-    machine: Optional["Machine"] = Relationship(back_populates="images")
-    runners: List["Runner"] = Relationship(back_populates="image")
-    scripts: List["Script"] = Relationship(back_populates="image")
+    # machine: Mapped[Optional["Machine"]] = Relationship(back_populates="images")
+    # runners: Mapped[List["Runner"]] = Relationship(back_populates="image")
+    # scripts: Mapped[List["Script"]] = Relationship(back_populates="image")
