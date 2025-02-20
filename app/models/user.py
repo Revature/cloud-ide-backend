@@ -1,6 +1,6 @@
-from typing import Optional
+from typing import List, Optional
 from datetime import datetime
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from app.models.mixins import TimestampMixin
 
 class User(TimestampMixin, SQLModel, table=True):
@@ -10,3 +10,7 @@ class User(TimestampMixin, SQLModel, table=True):
     email: str
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
+
+    # Relationships
+    runners: List["Runner"] = Relationship(back_populates="user")
+    user_roles: List["UserRole"] = Relationship(back_populates="user")

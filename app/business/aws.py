@@ -12,7 +12,7 @@ s3 = boto3.client('s3')
 
 # We can create or terminate vms in batches with the sdk, but I'd recommend that we stick to one at a time for now. If we need to scale, it can be done later, but managing multiple instances across availability zones and regions can lead to inconsistencies, since the termination requests are idempotent by AZ.
 
-async def Create_New_EC2(ImageId='XXXXXXXXXXXX', InstanceType='t1.micro', InstanceCount=1 ) -> str:
+async def Create_New_EC2(ImageId='XXXXXXXXXXXX', InstanceType='t2.medium', InstanceCount=1 ) -> str:
     ec2 = boto3.client('ec2')
     try:
         response = ec2.run_instances(
