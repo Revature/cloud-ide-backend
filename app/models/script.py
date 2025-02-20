@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
 from app.models.mixins import TimestampMixin
 
 class Script(TimestampMixin, SQLModel, table=True):
@@ -12,3 +12,6 @@ class Script(TimestampMixin, SQLModel, table=True):
     script: str
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
+
+    # Relationship to Image
+    image: "Image" = Relationship(back_populates="scripts")
