@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from app.db.database import get_session
 from app.models.user import User
+from app.schemas.user import UserCreate
 from app.api.authentication import verify_workos_token 
 
 # We'll need to import Role and UserRole when creating a user.
@@ -30,17 +31,16 @@ def read_user(user_id: int, session: Session = Depends(get_session)):
     return user
   
 @router.post("/", response_model=User)
-def create_user(user: User, session: Session = Depends(get_session)):
-    # Create the user record
+def create_user(user_create: UserCreate, session: Session = Depends(get_session)):
+    # Create a new User instance from the UserCreate data.
+    user = User(**user_create.model_dump(), created_by="system", modified_by="system")
     session.add(user)
     session.commit()
     session.refresh(user)
     
     # Automatically add the new user to the default user role.
-    # Check if a default role exists (e.g., with name "user")
     default_role = session.exec(select(Role).where(Role.name == "user")).first()
     if not default_role:
-        # If not, create it.
         default_role = Role(name="user", created_by="system", modified_by="system")
         session.add(default_role)
         session.commit()
