@@ -2,7 +2,7 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 from sqlmodel import SQLModel, Field
 from sqlalchemy import Column, JSON
-from app.models.mixins import TimestampMixin
+from models.mixins import TimestampMixin
 
 class RunnerHistory(TimestampMixin, SQLModel, table=True):
     __tablename__ = "runner_history" 

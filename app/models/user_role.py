@@ -1,7 +1,7 @@
 from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field
-from app.models.mixins import TimestampMixin
+from models.mixins import TimestampMixin
 
 class UserRole(TimestampMixin, SQLModel, table=True):
     __tablename__ = "user_role" 
