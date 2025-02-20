@@ -1,4 +1,5 @@
-from typing import Optional
+from typing import Optional, Dict, Any
+from sqlalchemy import Column, JSON
 from datetime import datetime
 from sqlmodel import SQLModel, Field
 from app.models.mixins import TimestampMixin
@@ -9,9 +10,15 @@ class Runner(TimestampMixin, SQLModel, table=True):
     image_id: int = Field(foreign_key="image.id")
     user_id: int = Field(foreign_key="user.id")
     state: str
-    pool_status: str
     url: str
-    started_on: datetime
+    token: str
+    external_hash: str
+    env_data: Dict[str, Any] = Field(
+        default={},
+        sa_column=Column(JSON, nullable=False)
+    )
+    session_start: Optional[datetime] = None
+    session_end: Optional[datetime] = None
     ended_on: Optional[datetime] = None
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
