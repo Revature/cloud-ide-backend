@@ -1,18 +1,17 @@
 # aws.py
 import asyncio
+import functools
 import boto3
 from botocore.exceptions import ClientError
-
-ec2 = boto3.client('ec2')
-s3 = boto3.client('s3')
 
 ###################
 # EC2 Functionality
 ###################
 
-# We can create or terminate vms in batches with the sdk, but I'd recommend that we stick to one at a time for now. If we need to scale, it can be done later, but managing multiple instances across availability zones and regions can lead to inconsistencies, since the termination requests are idempotent by AZ.
+# 'ami-01c42560340a40285' - Ubuntu 24.04 LTS arm64
+# 'ami-0991721486ed52a2c' - Ubuntu 24.04 LTS x86_64
 
-async def Create_New_EC2(ImageId='XXXXXXXXXXXX', InstanceType='t2.medium', InstanceCount=1 ) -> str:
+async def Create_New_EC2(ImageId='ami-0991721486ed52a2c', InstanceType='t2.medium', InstanceCount=1 ) -> str:
     ec2 = boto3.client('ec2')
     try:
         response = ec2.run_instances(
@@ -26,8 +25,6 @@ async def Create_New_EC2(ImageId='XXXXXXXXXXXX', InstanceType='t2.medium', Insta
         return str(e)    
 
 
-# Describing the instance will let us gather the ip addresses. Not sure if we want v4 or v6, or if we'll set up an elastic pool or something to help manage. For now I'm pulling individual IPv4, but we can scale this to gather blocks for a list of vms, or swap to v6s if we need to.
-
 async def Describe_EC2(InstanceId) -> str:
     ec2 = boto3.client('ec2')
     try:
@@ -39,7 +36,16 @@ async def Describe_EC2(InstanceId) -> str:
         return str(e)
 
 
-# Stopping a vm will produce returns almost the same as a terminiation, so we can monitor state the same way. We haven't talked about hibernating vms, but it's an option if we want to save state and resources, but it's not a default option in the sdk. We shouldn't get charged for stopped or hibernated instances, but if we have volumes attached we'll still be charged or them as if they were running.
+async def Describe_EC2_State(InstanceId) -> str:
+    ec2 = boto3.client('ec2')
+    try:
+        response = ec2.describe_instances(
+            InstanceIds=[InstanceId]
+            )
+        return response['Reservations'][0]['Instances'][0]['State']['Name']
+    except Exception as e:
+        return str(e)
+
 
 async def Stop_EC2(InstanceId) -> str:
     ec2 = boto3.client('ec2')
@@ -52,8 +58,6 @@ async def Stop_EC2(InstanceId) -> str:
         return str(e)   
 
 
-# Start is... well, a startup. Nothing should have changed, but we should probably run a healthcheck on the vm and the runner on it once it's back up, as well as geting the connection details in the event that the IP gets rotated to a new VM while an instance is stopped.
-
 async def Start_EC2(InstanceId) -> str:
     ec2 = boto3.client('ec2')
     try:
@@ -64,8 +68,6 @@ async def Start_EC2(InstanceId) -> str:
     except Exception as e:
         return str(e)
 
-
-# Termination is idempotent, so multiple calls will return sucessful responses. We can leverage this to monitor shut downs, as a return will give us the instance id, current state, and previous state (from last state change). We should be able to repeat the request to monitor the progress from 'running'/'stopped' to 'shutting-down' to 'terminated'. We may also see 'pending' if the instance is still initializing, but otherwise it can give us a rough progress report if we want to log from here.
 
 async def Terminate_EC2(InstanceId) -> str:
     ec2 = boto3.client('ec2')
@@ -83,6 +85,7 @@ async def Terminate_EC2(InstanceId) -> str:
 ###################
 
 async def Create_New_S3_Bucket(BucketName) -> str:
+    s3 = boto3.client('s3')
     try:
         response = s3.create_bucket(
             Bucket=BucketName
@@ -93,6 +96,7 @@ async def Create_New_S3_Bucket(BucketName) -> str:
     
 
 async def Delete_S3_Bucket(BucketName) -> str:
+    s3 = boto3.client('s3')
     try:
         response = s3.delete_bucket(
             Bucket=BucketName
@@ -103,6 +107,7 @@ async def Delete_S3_Bucket(BucketName) -> str:
     
 
 async def List_S3_Buckets() -> list[str]:
+    s3 = boto3.client('s3')
     try:
         response = s3.list_buckets()
         buckets = []
@@ -113,8 +118,8 @@ async def List_S3_Buckets() -> list[str]:
         return [str(e)]
 
 
-# Listing objects may get messy if there are a lot of objects. The sdk is built to handle 1000 objects at a response, with counts for pagination if we need ALL of the objects. I can add that to this method, but I wasn't sure what we were picturing for the scale here.
 async def List_S3_Objects(BucketName) -> list[str]:
+    s3 = boto3.client('s3')
     try:
         response = s3.list_objects_v2(
            Bucket=BucketName
@@ -127,9 +132,8 @@ async def List_S3_Objects(BucketName) -> list[str]:
         return [str(e)]
 
 
-# Putting objects is both create and update. Puts are never partial, so any metadata change must include the entire object to update
-
 async def Put_S3_Object(BucketName, ObjectName, ObjectData) -> str:
+    s3 = boto3.client('s3')
     try:
         response = s3.put_object(
             Bucket=BucketName,
@@ -142,6 +146,7 @@ async def Put_S3_Object(BucketName, ObjectName, ObjectData) -> str:
 
 
 async def Get_S3_Object(BucketName, ObjectName) -> object:
+    s3 = boto3.client('s3')
     try:
         response = s3.get_object(
             Bucket=BucketName,
@@ -153,6 +158,7 @@ async def Get_S3_Object(BucketName, ObjectName) -> object:
 
 
 async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
+    s3 = boto3.client('s3')
     for obj in ObjectNames:
         try:
             response = s3.delete_object(
@@ -162,13 +168,3 @@ async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
             return
         except Exception as e:
             return str(e)
-
-async def main():
-    print('Running...')
-    res = await Get_S3_Object('revature-dev-01092022','batch_curriculum_v2_contents/0ea30ce73ff6dfeca0878c07cfc9474a.txt')
-    print(res)
-
-asyncio.run(main())
-
-'batch_curriculum_v2_contents/0ea30ce73ff6dfeca0878c07cfc9474a.txt'
-'revature-dev-01092022'
