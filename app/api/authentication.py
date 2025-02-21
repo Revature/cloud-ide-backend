@@ -5,7 +5,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from workos import WorkOSClient
 
-# Use HTTPBearer to extract the token from the Authorization header
+# # Use HTTPBearer to extract the token from the Authorization header
 oauth2_scheme = HTTPBearer()
 
 # Initialize the WorkOSClient using environment variables (or hardcode for testing)

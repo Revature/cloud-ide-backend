@@ -3,3 +3,5 @@ sqlmodel
 pymysql 
 python-dotenv
 boto3
+workos
+uvicorn

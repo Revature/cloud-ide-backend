@@ -18,6 +18,9 @@ def create_db_and_tables():
     from app.models import user, machine, image, runner, role, user_role, script, runner_history
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
+    role.populate_roles()
+
+
     
 def get_session():
     DATABASE_URL = os.getenv("DATABASE_URL")

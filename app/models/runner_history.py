@@ -2,10 +2,10 @@ from typing import Optional, Dict, Any
 from datetime import datetime
 from sqlmodel import SQLModel, Field
 from sqlalchemy import Column, JSON
-from models.mixins import TimestampMixin
+from app.models.mixins import TimestampMixin
 
 class RunnerHistory(TimestampMixin, SQLModel, table=True):
-    __tablename__ = "runner_history" 
+    __tablename__ = "runner_history"
     id: Optional[int] = Field(default=None, primary_key=True)
     runner_id: int = Field(foreign_key="runner.id")
     event_name: str
