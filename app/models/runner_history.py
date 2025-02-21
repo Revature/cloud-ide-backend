@@ -1,7 +1,9 @@
+from __future__ import annotations
 from typing import Optional, Dict, Any
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, JSON
+from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 
 class RunnerHistory(TimestampMixin, SQLModel, table=True):
@@ -17,4 +19,4 @@ class RunnerHistory(TimestampMixin, SQLModel, table=True):
     created_by: str = Field(default="")
     
     # Relationships
-    runner: "Runner" = Relationship(back_populates="runner_histories")
+    # runner: Mapped["Runner"] = Relationship(back_populates="runner_histories")

@@ -1,6 +1,8 @@
+from __future__ import annotations
 from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 
 class UserRole(TimestampMixin, SQLModel, table=True):
@@ -12,5 +14,5 @@ class UserRole(TimestampMixin, SQLModel, table=True):
     created_by: str = Field(default="")
 
     # Relationships
-    user: "User" = Relationship(back_populates="user_roles")
-    role: "Role" = Relationship(back_populates="user_roles")
+    # user: Mapped["User"] = Relationship(back_populates="user_roles")
+    # role: Mapped["Role"] = Relationship(back_populates="user_roles")

@@ -68,7 +68,7 @@ def extend_runner_session(
     }
     new_history = RunnerHistory(
         runner_id=runner_id,
-        event_name="session extension",
+        event_name="session_extension",
         event_data=event_data,
         created_by="system",    # or the authenticated user's identifier
         modified_by="system"
