@@ -9,8 +9,6 @@ router = APIRouter()
 def get_ready_runner(session: Session = Depends(get_session)):
     """
     Retrieve a runner with the "ready" state.
-    
-    Optionally, mark the runner as "in_use" to reserve it so that it isn't handed out again.
     """
     stmt = select(Runner).where(Runner.state == "ready")
     ready_runner = session.exec(stmt).first()
@@ -20,7 +18,7 @@ def get_ready_runner(session: Session = Depends(get_session)):
             detail="No ready runner available"
         )
     
-    ready_runner.state = "in_use"
+    ready_runner.state = "setup"
     session.add(ready_runner)
     session.commit()
     session.refresh(ready_runner)
