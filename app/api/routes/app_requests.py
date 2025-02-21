@@ -19,6 +19,10 @@ def get_ready_runner(session: Session = Depends(get_session)):
         )
     
     ready_runner.state = "setup"
+    
+    # logic for setting the ENV and any scripts on the runner to run goes here
+    
+    
     session.add(ready_runner)
     session.commit()
     session.refresh(ready_runner)

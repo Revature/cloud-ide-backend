@@ -20,7 +20,7 @@ def cleanup_active_runners():
         # Query all runners that are active and whose session_end is in the past
         results = session.exec(
             select(Runner).where(
-                Runner.state == "active",
+                Runner.state != "terminated",
                 Runner.session_end < now
             )
         ).all()
