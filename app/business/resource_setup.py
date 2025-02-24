@@ -55,7 +55,7 @@ def setup_resources():
                 name="sample-id-image",
                 description="An AMI for testing",
                 identifier="ami-07f9ff58e9ab20148",
-                runner_pool_size=2,  # Example pool size
+                runner_pool_size=3,  # Example pool size
                 machine_id=db_machine.id,
                 created_by="system",
                 modified_by="system"

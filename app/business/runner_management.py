@@ -51,7 +51,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
                 identifier=instance_id,
                 external_hash=uuid.uuid4().hex,
                 session_start=datetime.utcnow(),
-                session_end=datetime.utcnow() + timedelta(minutes=30),
+                session_end=datetime.utcnow() + timedelta(minutes=10),
                 created_by="system",
                 modified_by="system"
             )
