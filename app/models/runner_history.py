@@ -6,6 +6,9 @@ from sqlalchemy import Column, JSON
 from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 
+# Relationships
+# runner: Mapped["Runner"] = Relationship(back_populates="runner_histories")
+
 class RunnerHistory(TimestampMixin, SQLModel, table=True):
     __tablename__ = "runner_history"
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -18,5 +21,3 @@ class RunnerHistory(TimestampMixin, SQLModel, table=True):
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
     
-    # Relationships
-    # runner: Mapped["Runner"] = Relationship(back_populates="runner_histories")

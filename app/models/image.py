@@ -6,6 +6,12 @@ from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 from app.db import database
 
+
+# Relationships
+# machine: Mapped[Optional["Machine"]] = Relationship(back_populates="images")
+# runners: Mapped[List["Runner"]] = Relationship(back_populates="image")
+# scripts: Mapped[List["Script"]] = Relationship(back_populates="image")
+
 class Image(TimestampMixin, SQLModel, table=True):
     # id: Optional[int] = Field(default=None, primary_key=True)
     id: int | None = Field(default=None, primary_key=True)
@@ -47,8 +53,3 @@ def get_image(image_id: int):
 def delete_image(image_id: int):
     with next(database.get_session()) as session:
         session.delete(image_id)
-
-    # Relationships
-    # machine: Mapped[Optional["Machine"]] = Relationship(back_populates="images")
-    # runners: Mapped[List["Runner"]] = Relationship(back_populates="image")
-    # scripts: Mapped[List["Script"]] = Relationship(back_populates="image")

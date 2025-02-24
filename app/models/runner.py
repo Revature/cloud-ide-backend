@@ -7,6 +7,27 @@ from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 from app.db import database
 
+# states
+# runner_starting
+# app_starting
+# ready
+# setup
+# awaiting_client
+# active
+# disconnecting
+# disconnected
+# closed
+# terminated
+
+# runner_alive states = [runner_starting, app_starting, ready, setup, awaiting_client, active, disconnecting, disconnected]
+# runner_dead states = [closed, terminated]
+
+# Relationships
+# machine: Mapped["Machine"] = Relationship(back_populates="runners")
+# image: Mapped["Image"] = Relationship(back_populates="runners")
+# user: Mapped["User"] = Relationship(back_populates="runners")
+# runner_histories: Mapped[List["RunnerHistory"]] = Relationship(back_populates="runner")
+
 class Runner(TimestampMixin, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     machine_id: int = Field(foreign_key="machine.id")
@@ -36,27 +57,6 @@ class Runner(TimestampMixin, SQLModel, table=True):
         }
         return self.state in alive_states
 
-        
-    # states
-    # runner_starting
-    # app_starting
-    # ready
-    # setup
-    # awaiting_client
-    # active
-    # disconnecting
-    # disconnected
-    # closed
-    # terminated
-
-    # runner_alive states = [runner_starting, app_starting, ready, setup, awaiting_client, active, disconnecting, disconnected]
-    # runner_dead states = [closed, terminated]
-
-    # Relationships
-    # machine: Mapped["Machine"] = Relationship(back_populates="runners")
-    # image: Mapped["Image"] = Relationship(back_populates="runners")
-    # user: Mapped["User"] = Relationship(back_populates="runners")
-    # runner_histories: Mapped[List["RunnerHistory"]] = Relationship(back_populates="runner")
     
 class RunnerUpdate(TimestampMixin, SQLModel):
     id: int

@@ -6,6 +6,10 @@ from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 from app.db import database
 
+
+# Relationship
+# image: Mapped["Image"] = Relationship(back_populates="scripts")
+
 class Script(TimestampMixin, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
@@ -15,9 +19,6 @@ class Script(TimestampMixin, SQLModel, table=True):
     script: str
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
-
-    # Relationship
-    # image: Mapped["Image"] = Relationship(back_populates="scripts")
 
 class ScriptUpdate(TimestampMixin, SQLModel):
     id: int
@@ -51,4 +52,4 @@ def get_script(script_id: int):
 def delete_script(script_id: int):
     with next(database.get_session()) as session:
         session.delete(script_id)
-        #session.commit() #this is implicitly called when the session goes out?
+        session.commit()
