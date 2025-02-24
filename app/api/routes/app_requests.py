@@ -14,7 +14,7 @@ class RunnerRequest(BaseModel):
     env_data: Dict[str, Any]
     user_email: str
 
-@router.post("/app_request")
+@router.post("/app_request", response_model=Dict[str, str])
 def get_ready_runner(request: RunnerRequest, session: Session = Depends(get_session)):
     """
     Retrieve a runner with the "ready" state for the given image,
