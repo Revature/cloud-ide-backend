@@ -18,14 +18,13 @@ async def lifespan(app: FastAPI):
 
     resources = setup_resources()
     image_identifier = resources.db_image.identifier
-    user_email = resources.system_user_email
     runner_count = resources.db_image.runner_pool_size
-    await launch_runners(image_identifier, user_email, runner_count)
+    await launch_runners(image_identifier, runner_count)
 
     # Yield so the app can start serving requests
     yield
 
-    # On shutdown: terminate all launched instances
+    # On shutdown: terminate all alive runners
     await shutdown_all_runners()
 
 app = FastAPI(lifespan=lifespan)

@@ -6,7 +6,7 @@ from app.models import Machine, Image, Runner, User
 from app.business.aws import Create_New_EC2, Describe_EC2, Stop_EC2, Terminate_EC2
 from app.tasks.starting_runner import update_runner_state
 
-async def launch_runners(image_identifier: str, user_email: str, runner_count: int):
+async def launch_runners(image_identifier: str, runner_count: int):
     """
     Launches EC2 instances and creates Runner records.
     Returns a list of launched instance IDs.
@@ -14,19 +14,13 @@ async def launch_runners(image_identifier: str, user_email: str, runner_count: i
     launched_instance_ids = []
 
     with Session(engine) as session:
-        # 1) Fetch the user
-        stmt_user = select(User).where(User.email == user_email)
-        system_user = session.exec(stmt_user).first()
-        if not system_user:
-            raise Exception("User not found")
-        
-        # 2) Fetch the Image
+        # 1) Fetch the Image
         stmt_image = select(Image).where(Image.identifier == image_identifier)
         db_image = session.exec(stmt_image).first()
         if not db_image:
             raise Exception("Image not found")
         
-        # 3) Fetch the Machine associated with the image
+        # 2) Fetch the Machine associated with the image
         if db_image.machine_id is None:
             raise Exception("No machine associated with the image")
         else:
@@ -35,7 +29,7 @@ async def launch_runners(image_identifier: str, user_email: str, runner_count: i
             if not db_machine:
                 raise Exception("Machine not found")
         
-        # 4) Launch EC2 instances for each runner
+        # 3) Launch EC2 instances for each runner
         for _ in range(runner_count):
             instance_id = await Create_New_EC2(
                 ImageId=db_image.identifier,
@@ -44,14 +38,13 @@ async def launch_runners(image_identifier: str, user_email: str, runner_count: i
             )
             launched_instance_ids.append(instance_id)
 
-            # 5) Retrieve the public IP
+            # 4) Retrieve the public IP
             public_ip = await Describe_EC2(instance_id)
 
-            # 6) Create the Runner record
+            # 5) Create the Runner record
             new_runner = Runner(
                 machine_id=db_machine.id,
                 image_id=db_image.id,
-                user_id=system_user.id,
                 state="runner_starting",
                 url=public_ip or "",
                 token="",
@@ -66,7 +59,7 @@ async def launch_runners(image_identifier: str, user_email: str, runner_count: i
             session.commit()
             session.refresh(new_runner)
 
-            # 7) Queue the Celery task to update runner state when EC2 is ready
+            # 6) Queue the Celery task to update runner state when EC2 is ready
             update_runner_state.delay(new_runner.id, instance_id)
 
     return launched_instance_ids

@@ -7,7 +7,8 @@ from app.celery_app import celery_app
 from app.db.database import engine
 from app.models.runner import Runner
 from app.models.runner_history import RunnerHistory
-from app.business.aws import Stop_EC2
+from app.business.aws import Stop_EC2, Terminate_EC2
+from sqlalchemy import not_
 
 logger = get_task_logger(__name__)
 
@@ -20,7 +21,7 @@ def cleanup_active_runners():
         # Query all runners that are active and whose session_end is in the past
         results = session.exec(
             select(Runner).where(
-                Runner.state != "terminated",
+                ~Runner.state.in_(["terminated", "ready"]),
                 Runner.session_end < now
             )
         ).all()
@@ -31,6 +32,7 @@ def cleanup_active_runners():
 
             # 1) Stop or Terminate the instance
             Stop_EC2(runner.identifier)  # or Terminate_EC2 if you want to fully kill it
+            Terminate_EC2(runner.identifier)
 
             # 2) Update the runner record
             runner.state = "closed"
