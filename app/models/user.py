@@ -1,8 +1,16 @@
-from sqlmodel import SQLModel, Field
+from __future__ import annotations
+from typing import List, Optional
+from datetime import datetime
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 from app.db.database import get_session
 from sqlmodel import Field, SQLModel, create_engine, select
 from app.models import role, user_role
+
+# Relationships
+# runners: Mapped[List["Runner"]] = Relationship(back_populates="user")
+# user_roles: Mapped[List["UserRole"]] = Relationship(back_populates="user")
 
 class User(TimestampMixin, SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)

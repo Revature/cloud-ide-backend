@@ -1,7 +1,8 @@
-from typing import Optional
-from enum import Enum
+from __future__ import annotations
+from typing import List, Optional
 from datetime import datetime
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 from app.db.database import get_session
 

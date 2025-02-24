@@ -1,6 +1,8 @@
-from typing import Optional
+from __future__ import annotations
+from typing import List, Optional
 from datetime import datetime
-from sqlmodel import SQLModel, Field
+from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 from app.db import database
 
@@ -13,6 +15,10 @@ class Machine(TimestampMixin, SQLModel, table=True):
     storage_size: int
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
+    
+# Relationships
+# images: Mapped[List["Image"]] = Relationship(back_populates="machine")
+# runners: Mapped[List["Runner"]] = Relationship(back_populates="machine")
     
 class MachineUpdate(TimestampMixin, SQLModel):
     id: int
@@ -47,3 +53,4 @@ def delete_machine(machine_id: int):
     with next(database.get_session()) as session:
         session.delete(machine_id)
         #session.commit() #this is implicitly called when the session goes out?
+
