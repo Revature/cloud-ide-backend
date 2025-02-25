@@ -8,3 +8,4 @@ uvicorn
 email-validator
 cryptography
 paramiko
+celery
