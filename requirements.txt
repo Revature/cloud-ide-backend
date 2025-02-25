@@ -7,4 +7,3 @@ workos
 uvicorn
 email-validator
 cryptography
-celery
