@@ -1,12 +1,16 @@
 # app/api/authentication.py
 # https://workos.com/docs/reference/sso/profile/get-user-profile
 import os
+from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from workos import WorkOSClient
 
-# Use HTTPBearer to extract the token from the Authorization header
+# # Use HTTPBearer to extract the token from the Authorization header
 oauth2_scheme = HTTPBearer()
+
+# Get environment vars from .env
+load_dotenv()
 
 # Initialize the WorkOSClient using environment variables (or hardcode for testing)
 workos_client = WorkOSClient(

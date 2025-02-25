@@ -27,25 +27,23 @@ def read_runner(runner_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Runner not found")
     return runner
 
-@router.put("/{runner_id}", response_model=Runner)
+@router.put("/extend_session", response_model=str)
 def extend_runner_session(
-    runner_id: int,
     extend_req: ExtendSessionRequest,
     session: Session = Depends(get_session)
 ):
-    # Retrieve the runner record.
-    runner = session.get(Runner, runner_id)
+    runner = session.get(Runner, extend_req.runner_id)
     if not runner:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Runner not found"
         )
     
-    # Calculate the new session_end by adding the extra time.
+    # Calculate the new session_end by adding extra_time.
     extension = timedelta(minutes=extend_req.extra_time)
     new_session_end = runner.session_end + extension
     
-    # Check that the total session duration (from session_start to new_session_end) does not exceed 3 hours.
+    # Check that total session duration does not exceed 3 hours.
     total_duration = new_session_end - runner.session_start
     if total_duration > timedelta(hours=3):
         raise HTTPException(
@@ -53,7 +51,7 @@ def extend_runner_session(
             detail="Extension would exceed maximum allowed session time of 3 hours."
         )
     
-    # Save the old session_end for logging.
+    # Save the old session_end for history logging.
     old_session_end = runner.session_end
     
     # Update the runner's session_end.
@@ -67,14 +65,14 @@ def extend_runner_session(
         "new_session_end": new_session_end.isoformat()
     }
     new_history = RunnerHistory(
-        runner_id=runner_id,
+        runner_id=runner.id,
         event_name="session_extension",
         event_data=event_data,
-        created_by="system",    # or the authenticated user's identifier
+        created_by="system",  # or the authenticated user's identifier
         modified_by="system"
     )
     session.add(new_history)
     
     session.commit()
     session.refresh(runner)
-    return runner
+    return "Session extended successfully"

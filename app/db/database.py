@@ -9,6 +9,8 @@ load_dotenv()
 # For local testing, you can use SQLite:
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+print(DATABASE_URL)
+
 engine = create_engine(DATABASE_URL, echo=True)
 
 def create_db_and_tables():
@@ -16,7 +18,12 @@ def create_db_and_tables():
     from app.models import user, machine, image, runner, role, user_role, script, runner_history
     SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
+    role.populate_roles()
+
+
     
 def get_session():
+    DATABASE_URL = os.getenv("DATABASE_URL")
+    engine = create_engine(DATABASE_URL, echo=True)
     with Session(engine) as session:
         yield session
