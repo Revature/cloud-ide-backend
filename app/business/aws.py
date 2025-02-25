@@ -1,8 +1,60 @@
 # aws.py
-import asyncio
-import functools
 import boto3
-from botocore.exceptions import ClientError
+import datetime
+import paramiko
+from io import StringIO
+
+
+###################
+# Keypair Functionality
+###################
+
+# Create_New_Keypair() creates a new keypair and returns the private key and keypair id as a dictionary
+async def Create_New_Keypair() -> dict:
+    ec2 = boto3.client('ec2')
+    try:
+        response = ec2.create_key_pair(
+            KeyName="Keypair-" + datetime.datetime.now().strftime("%Y-%m-%d")
+            )
+        return {'PrimaryKey':response['KeyMaterial'], 'KeyPairId':response['KeyPairId']}
+    except Exception as e:
+        return str(e)
+
+
+async def Delete_Keypair(KeyId) -> str:
+    ec2 = boto3.client('ec2')
+    try:
+        response = ec2.delete_key_pair(
+            KeyPairId=KeyId
+            )
+        return response['ResponseMetadata']['HTTPStatusCode']
+    except Exception as e:
+        return str(e)
+
+
+# Describe_KeyPairId() returns the keypair id of the keypair with the given KeyName.
+async def Describe_KeyPairId(KeyName) -> str:
+    ec2 = boto3.client('ec2')
+    try:
+        response = ec2.describe_key_pairs(
+            KeyNames=[KeyName]
+            )
+        return response['KeyPairs'][0]['KeyPairId']
+    except Exception as e:
+        return str(e)
+    
+
+# Describe_KeyName() returns the name of the keypair with the given KeyId. 
+async def Describe_KeyName(KeyPairId) -> str:
+    ec2 = boto3.client('ec2')
+    try:
+        response = ec2.describe_key_pairs(
+            KeyPairIds=[KeyPairId]
+            )
+        return response['KeyPairs'][0]['KeyName']
+    except Exception as e:
+        return str(e)
+    
 
 ###################
 # EC2 Functionality
@@ -11,20 +63,31 @@ from botocore.exceptions import ClientError
 # 'ami-01c42560340a40285' - Ubuntu 24.04 LTS arm64
 # 'ami-0991721486ed52a2c' - Ubuntu 24.04 LTS x86_64
 
-async def Create_New_EC2(ImageId='ami-0991721486ed52a2c', InstanceType='t2.medium', InstanceCount=1 ) -> str:
+async def Create_New_EC2(KeyName, ImageId='ami-0991721486ed52a2c', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
     ec2 = boto3.client('ec2')
     try:
         response = ec2.run_instances(
             ImageId=ImageId,
             InstanceType=InstanceType,
             MinCount=InstanceCount,
-            MaxCount=InstanceCount
-            )
+            MaxCount=InstanceCount,
+            KeyName=KeyName,
+            SecurityGroupIds=SecurityGroups,
+            TagSpecifications=[ 
+                {
+                    'ResourceType': 'instance',
+                    'Tags': [
+                        { 'Key': 'Name', 'Value': 'Cloud-IDE'},
+                    ]
+                }
+            ]
+        )
         return response['Instances'][0]['InstanceId']
     except Exception as e:
         return str(e)    
 
 
+# Describe_EC2() returns the public IP address of the EC2 instance with the given InstanceId.
 async def Describe_EC2(InstanceId) -> str:
     ec2 = boto3.client('ec2')
     try:
@@ -36,6 +99,7 @@ async def Describe_EC2(InstanceId) -> str:
         return str(e)
 
 
+# Describe_EC2_State() returns the state of the EC2 instance with the given InstanceId.
 async def Describe_EC2_State(InstanceId) -> str:
     ec2 = boto3.client('ec2')
     try:
@@ -168,3 +232,28 @@ async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
             return
         except Exception as e:
             return str(e)
+
+
+###################
+# SSH Functionality
+###################
+
+async def SSH_Script(IP, Key, Script, Username = 'ubuntu') -> str:
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    keyfile = StringIO(Key)
+    private_key = paramiko.RSAKey.from_private_key(keyfile)
+
+    try:
+        ssh.connect(hostname=IP, username=Username, pkey=private_key)
+        stdin, stdout, stderr = ssh.exec_command(Script)
+        output = stdout.read().decode()
+        error = stderr.read().decode()
+
+    except Exception as e:
+        return str(e), error
+    
+    finally:
+        ssh.close()
+
+    return output, error
