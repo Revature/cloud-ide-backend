@@ -79,6 +79,10 @@ async def Terminate_EC2(InstanceId) -> str:
     except Exception as e:
         return str(e)
     
+def wait_for_instance_running(instance_id: str, region: str = "us-west-2") -> None:
+    ec2 = boto3.client("ec2", region_name=region)
+    waiter = ec2.get_waiter("instance_running")
+    waiter.wait(InstanceIds=[instance_id])
 
 ###################
 # S3 Functionality
