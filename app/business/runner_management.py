@@ -45,7 +45,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
             new_runner = Runner(
                 machine_id=db_machine.id,
                 image_id=db_image.id,
-                state="runner_starting",
+                state="ready",
                 url=public_ip or "",
                 token="",
                 identifier=instance_id,
@@ -60,7 +60,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
             session.refresh(new_runner)
 
             # 6) Queue the Celery task to update runner state when EC2 is ready
-            update_runner_state.delay(new_runner.id, instance_id)
+            #update_runner_state.delay(new_runner.id, instance_id)
 
     return launched_instance_ids
 
