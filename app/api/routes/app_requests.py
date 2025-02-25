@@ -76,7 +76,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     # Update the runner: assign the user, update environment data, and change state to "setup".
     runner.user_id = user_obj.id
     runner.env_data = {"env": request.env_data}
-    runner.state = "setup"
+    runner.state = "active"
     
     session.add(runner)
     session.commit()

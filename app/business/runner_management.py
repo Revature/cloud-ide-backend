@@ -3,48 +3,62 @@ from datetime import datetime, timedelta
 from sqlmodel import Session, select
 from app.db.database import engine
 from app.models import Machine, Image, Runner, User
-from app.business.aws import Create_New_EC2, Describe_EC2, Stop_EC2, Terminate_EC2
+from app.business.aws import Create_New_EC2, Describe_EC2, Stop_EC2, Terminate_EC2, wait_for_instance_running
+import asyncio
 from app.tasks.starting_runner import update_runner_state
 
 async def launch_runners(image_identifier: str, runner_count: int):
     """
-    Launches EC2 instances and creates Runner records.
+    Launches EC2 instances concurrently and creates Runner records after
+    waiting for all instances to be running.
     Returns a list of launched instance IDs.
     """
     launched_instance_ids = []
-
+    
+    # Open one DB session for reading resources.
     with Session(engine) as session:
-        # 1) Fetch the Image
+        # 1) Fetch the Image.
         stmt_image = select(Image).where(Image.identifier == image_identifier)
         db_image = session.exec(stmt_image).first()
         if not db_image:
             raise Exception("Image not found")
         
-        # 2) Fetch the Machine associated with the image
+        # 2) Fetch the Machine associated with the image.
         if db_image.machine_id is None:
             raise Exception("No machine associated with the image")
-        else:
-            stmt_machine = select(Machine).where(Machine.id == db_image.machine_id)
-            db_machine = session.exec(stmt_machine).first()
-            if not db_machine:
-                raise Exception("Machine not found")
-        
-        # 3) Launch EC2 instances for each runner
-        for _ in range(runner_count):
-            instance_id = await Create_New_EC2(
-                ImageId=db_image.identifier,
-                InstanceType=db_machine.identifier,
-                InstanceCount=1
-            )
-            launched_instance_ids.append(instance_id)
-
-            # 4) Retrieve the public IP
-            public_ip = await Describe_EC2(instance_id)
-
-            # 5) Create the Runner record
+        stmt_machine = select(Machine).where(Machine.id == db_image.machine_id)
+        db_machine = session.exec(stmt_machine).first()
+        if not db_machine:
+            raise Exception("Machine not found")
+    
+    # 3) Launch all EC2 instances concurrently.
+    launch_tasks = [
+        Create_New_EC2(
+            ImageId=db_image.identifier,
+            InstanceType=db_machine.identifier,
+            InstanceCount=1
+        )
+        for _ in range(runner_count)
+    ]
+    instance_ids = await asyncio.gather(*launch_tasks)
+    launched_instance_ids.extend(instance_ids)
+    
+    # 4) Wait concurrently for all instances to be in the "running" state.
+    wait_tasks = [asyncio.to_thread(wait_for_instance_running, instance_id) for instance_id in instance_ids]
+    await asyncio.gather(*wait_tasks)
+    
+    # 5) Retrieve the public IP addresses concurrently.
+    ip_tasks = [Describe_EC2(instance_id) for instance_id in instance_ids]
+    public_ips = await asyncio.gather(*ip_tasks)
+    
+    # 6) Create Runner records (using a new session for each record is safest to avoid session concurrency issues)
+    for instance_id, public_ip in zip(instance_ids, public_ips):
+        with Session(engine) as session:
             new_runner = Runner(
                 machine_id=db_machine.id,
                 image_id=db_image.id,
+                # No user assigned yet; this can be updated later.
+                user_id=None,
                 state="ready",
                 url=public_ip or "",
                 token="",
@@ -58,10 +72,10 @@ async def launch_runners(image_identifier: str, runner_count: int):
             session.add(new_runner)
             session.commit()
             session.refresh(new_runner)
-
-            # 6) Queue the Celery task to update runner state when EC2 is ready
-            #update_runner_state.delay(new_runner.id, instance_id)
-
+            
+            # Optionally, queue a Celery task to update runner state when needed.
+            # update_runner_state.delay(new_runner.id, instance_id)
+    
     return launched_instance_ids
 
 async def shutdown_runners(launched_instance_ids: list):
