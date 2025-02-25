@@ -78,7 +78,8 @@ async def Describe_KeyName(KeyPairId) -> str:
 # 'ami-0991721486ed52a2c' - Ubuntu 24.04 LTS x86_64
 
 
-async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
+#async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
+async def Create_New_EC2(ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
     """
     Create a new EC2 instance.
     Returns the InstanceId as a string.
@@ -90,7 +91,7 @@ async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType=
             InstanceType=InstanceType,
             MinCount=InstanceCount,
             MaxCount=InstanceCount,
-            KeyName=KeyName,
+            # KeyName=KeyName,
             SecurityGroupIds=SecurityGroups,
             TagSpecifications=[ 
                 {
@@ -314,7 +315,6 @@ async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
 ###################
 # SSH Functionality
 ###################
-
 
 async def SSH_Script(IP, Key, Script, Username = 'ubuntu') -> dict[str, str]:
     """
