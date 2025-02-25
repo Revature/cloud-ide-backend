@@ -48,13 +48,13 @@ def setup_resources():
             session.refresh(db_machine)
         
         # 3) Fetch or create default Image
-        stmt_image = select(Image).where(Image.identifier == "ami-07f9ff58e9ab20148")
+        stmt_image = select(Image).where(Image.identifier == "ami-0bbfffa970b0280da")
         db_image = session.exec(stmt_image).first()
         if not db_image:
             db_image = Image(
                 name="sample-id-image",
                 description="An AMI for testing",
-                identifier="ami-07f9ff58e9ab20148",
+                identifier="ami-0bbfffa970b0280da",
                 runner_pool_size=3,  # Example pool size
                 machine_id=db_machine.id,
                 created_by="system",

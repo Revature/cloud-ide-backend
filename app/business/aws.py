@@ -22,7 +22,7 @@ async def Create_New_EC2(ImageId='ami-0991721486ed52a2c', InstanceType='t2.mediu
             )
         return response['Instances'][0]['InstanceId']
     except Exception as e:
-        return str(e)    
+        return str(e)
 
 
 async def Describe_EC2(InstanceId) -> str:

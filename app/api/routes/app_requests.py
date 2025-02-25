@@ -17,7 +17,7 @@ class RunnerRequest(BaseModel):
     env_data: Dict[str, Any]
     user_email: str
 
-@router.post("/app_request", response_model=Dict[str, str])
+@router.post("/", response_model=Dict[str, str])
 async def get_ready_runner(request: RunnerRequest, session: Session = Depends(get_session)):
     """
     Retrieve a runner with the "ready" state for the given image and assign it to a user.
@@ -90,4 +90,4 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
         asyncio.create_task(launch_runners(db_image.identifier, 1))
     
     # return {"encrypted_url": encrypted_url}
-    return {"url": runner.url}
+    return {"url": f"http://{runner.url}:3000"}
