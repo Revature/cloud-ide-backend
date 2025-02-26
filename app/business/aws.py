@@ -106,6 +106,7 @@ async def Create_New_EC2(KeyName, ImageId='ami-0991721486ed52a2c', InstanceType=
         return str(e)    
 
 
+# Future Work: Terminate multiple instances at once -> InstanceId -> InstanceIds
 async def Describe_EC2(InstanceId) -> str:
     """
     Describe the EC2 instance with the given InstanceId.
@@ -121,6 +122,7 @@ async def Describe_EC2(InstanceId) -> str:
         return str(e)
 
 
+# Future Work: Terminate multiple instances at once -> InstanceId -> InstanceIds
 async def Describe_EC2_State(InstanceId) -> str:
     """
     Describe the state of the EC2 instance with the given InstanceId.
@@ -136,6 +138,7 @@ async def Describe_EC2_State(InstanceId) -> str:
         return str(e)
 
 
+# Future Work: Terminate multiple instances at once -> InstanceId -> InstanceIds
 async def Stop_EC2(InstanceId) -> str:
     """
     Stop the EC2 instance with the given InstanceId.
@@ -151,6 +154,7 @@ async def Stop_EC2(InstanceId) -> str:
         return str(e)   
 
 
+# Future Work: Terminate multiple instances at once -> InstanceId -> InstanceIds
 async def Start_EC2(InstanceId) -> str:
     """
     Start the EC2 instance with the given InstanceId.
