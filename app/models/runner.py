@@ -33,6 +33,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
     machine_id: int = Field(foreign_key="machine.id")
     image_id: int = Field(foreign_key="image.id")
     user_id: Optional[int] = Field(default=None, foreign_key="user.id")
+    key_id: Optional[int] = Field(default=None, foreign_key="key.id")
     state: str
     url: str
     token: str

@@ -4,23 +4,22 @@ import datetime
 import paramiko
 from io import StringIO
 
-
 ###################
 # Keypair Functionality
 ###################
 
-async def Create_New_Keypair() -> dict[str, str]:
+async def Create_New_Keypair(KeyName: str) -> dict[str, str]:
     """
-    Create a new keypair.
-    Returns the private key and keypair id as a dictionary of strings.
-    {'PrimaryKey':'Value', 'KeyPairId':'Value'}
+    Create a new keypair using the provided KeyName.
+    Returns a dictionary with the private key and keypair id.
+    Example: {'PrimaryKey': <private key>, 'KeyPairId': <keypair id>}
     """
     ec2 = boto3.client('ec2')
     try:
         response = ec2.create_key_pair(
-            KeyName="Keypair-" + datetime.datetime.now().strftime("%Y-%m-%d")
-            )
-        return {'PrimaryKey':response['KeyMaterial'], 'KeyPairId':response['KeyPairId']}
+            KeyName=KeyName
+        )
+        return {'PrimaryKey': response['KeyMaterial'], 'KeyPairId': response['KeyPairId']}
     except Exception as e:
         return str(e)
 
@@ -78,7 +77,8 @@ async def Describe_KeyName(KeyPairId) -> str:
 # 'ami-0991721486ed52a2c' - Ubuntu 24.04 LTS x86_64
 
 
-async def Create_New_EC2(KeyName, ImageId='ami-0991721486ed52a2c', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
+async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
+#async def Create_New_EC2(ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
     """
     Create a new EC2 instance.
     Returns the InstanceId as a string.
@@ -96,14 +96,14 @@ async def Create_New_EC2(KeyName, ImageId='ami-0991721486ed52a2c', InstanceType=
                 {
                     'ResourceType': 'instance',
                     'Tags': [
-                        { 'Key': 'Name', 'Value': 'Cloud-IDE'},
+                        { 'Key': 'Name', 'Value': 'Ashoka-Testing'},
                     ]
                 }
             ]
         )
         return response['Instances'][0]['InstanceId']
     except Exception as e:
-        return str(e)    
+        return str(e)
 
 
 # Future Work: Terminate multiple instances at once -> InstanceId -> InstanceIds
@@ -318,7 +318,6 @@ async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
 ###################
 # SSH Functionality
 ###################
-
 
 async def SSH_Script(IP, Key, Script, Username = 'ubuntu') -> dict[str, str]:
     """

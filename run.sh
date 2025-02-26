@@ -2,4 +2,4 @@
 echo running...
 source .venv/Scripts/activate
 pip install -r requirements.txt
-uvicorn tinkering:app --reload
+uvicorn app.main:app --reload

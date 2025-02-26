@@ -13,6 +13,7 @@ celery_app.conf.timezone = "UTC"
 
 import app.tasks.starting_runner
 import app.tasks.cleanup_runners
+import app.tasks.runner_pool_management
 
 # Set up the beat schedule
 celery_app.conf.beat_schedule = {
@@ -20,6 +21,10 @@ celery_app.conf.beat_schedule = {
     "cleanup-active-runners": {
         "task": "app.tasks.cleanup_runners.cleanup_active_runners",
         "schedule": 900.0,  # 15 minutes in seconds
+    },
+    "manage_runner_pool_task": {
+        "task": "app.tasks.runner_pool_management.manage_runner_pool",
+        "schedule": 300  # Every 5 minutes
     },
 }
 
