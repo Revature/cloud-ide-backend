@@ -97,7 +97,7 @@ async def Create_New_EC2(ImageId='ami-0bbfffa970b0280da', InstanceType='t2.mediu
                 {
                     'ResourceType': 'instance',
                     'Tags': [
-                        { 'Key': 'Name', 'Value': 'RevaturePro-Testing'},
+                        { 'Key': 'Name', 'Value': 'Ashoka-Testing'},
                     ]
                 }
             ]

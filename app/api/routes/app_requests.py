@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from typing import Dict, Any
 from app.business.runner_management import launch_runners
 import asyncio
+from datetime import timedelta, datetime
 
 router = APIRouter()
 
@@ -16,6 +17,8 @@ class RunnerRequest(BaseModel):
     image_id: int
     env_data: Dict[str, Any]
     user_email: str
+    session_time: int  # in minutes, limit to 3 hours
+    runner_type: str  # temporary/permanent
 
 @router.post("/", response_model=Dict[str, str])
 async def get_ready_runner(request: RunnerRequest, session: Session = Depends(get_session)):
@@ -36,7 +39,34 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     if not db_image:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")
     
-    # Determine which runner to use.
+    # Look up the user by email.
+    stmt_user = select(User).where(User.email == request.user_email)
+    user_obj = session.exec(stmt_user).first()
+    if not user_obj:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    # Check if the user has any "alive" runners for the requested image
+    stmt_runner = select(Runner).where(Runner.state.in_(['active', 'ready']), Runner.image_id == request.image_id, Runner.user_id == user_obj.id)
+    existing_runner = session.exec(stmt_runner).first()
+    
+    if existing_runner:
+        # User has an "alive" runner, update the session_end with the requested session time
+        if request.session_time > 180:  # Limiting to 3 hours (180 minutes)
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Session time cannot exceed 3 hours.")
+        
+        # Calculate new session_end time
+        session_end = existing_runner.session_start + timedelta(minutes=request.session_time)
+        
+        # Update the runner's session_end
+        existing_runner.session_end = session_end
+        session.add(existing_runner)
+        session.commit()
+        session.refresh(existing_runner)
+
+        # Return the URL of the existing runner
+        return {"url": f"http://{existing_runner.url}:3000"}
+
+    # If no existing "alive" runner is found, we need to either launch a new runner or use an existing ready one
     if db_image.runner_pool_size == 0:
         # Launch a new runner and wait for it to be ready.
         instance_ids = await launch_runners(db_image.identifier, 1)
@@ -52,6 +82,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
             if runner and runner.state == "ready":
                 break
             await asyncio.sleep(5)
+        
         if not runner or runner.state != "ready":
             raise HTTPException(status_code=500, detail="Runner did not become ready in time")
     else:
@@ -64,19 +95,17 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
                 detail="No ready runner available for that image"
             )
     
-    # Look up the user by email.
-    stmt_user = select(User).where(User.email == request.user_email)
-    user_obj = session.exec(stmt_user).first()
-    if not user_obj:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
     # Update the runner: assign the user, update environment data, and change state to "setup".
     runner.user_id = user_obj.id
     runner.env_data = {"env": request.env_data}
     runner.state = "active"
+    
+    # If the runner is new, set the session_end based on session_time
+    if request.session_time > 180:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Session time cannot exceed 3 hours.")
+    
+    runner.session_start = datetime.utcnow()
+    runner.session_end = runner.session_start + timedelta(minutes=request.session_time)
     
     session.add(runner)
     session.commit()
@@ -90,4 +119,4 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
         asyncio.create_task(launch_runners(db_image.identifier, 1))
     
     # return {"encrypted_url": encrypted_url}
-    return {"url": f"http://{runner.url}:3000"}
+    return {"url": f"http://{runner.url}:3000", "runner_id": runner.id}

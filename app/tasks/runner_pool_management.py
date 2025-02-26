@@ -4,9 +4,9 @@ from app.celery_app import celery_app
 from app.db.database import engine
 from app.models.runner import Runner
 from app.models.image import Image
-from app.business.runner_management import launch_runners, shutdown_runners
 from sqlalchemy import func
 from celery.utils.log import get_task_logger
+import asyncio
 
 logger = get_task_logger(__name__)
 
@@ -26,16 +26,19 @@ def manage_runner_pool():
         for image in images:
             # 2) Get the current number of "ready" runners for the image
             stmt_ready_runners = select(Runner).where(Runner.state == "ready", Runner.image_id == image.id)
-            ready_runners_count = session.exec(stmt_ready_runners).count()
+            ready_runners = session.exec(stmt_ready_runners).all()
+            ready_runners_count = len(ready_runners)
 
             # 3) Compare the ready runner count with the pool size
             if ready_runners_count < image.runner_pool_size:
+                from app.business.runner_management import launch_runners
                 # If there are fewer ready runners than required, launch new ones
                 runners_to_create = image.runner_pool_size - ready_runners_count
                 logger.info(f"Launching {runners_to_create} new runners for image {image.id}.")
-                launch_runners(image.identifier, runners_to_create)
+                asyncio.run(launch_runners(image.identifier, runners_to_create))
             
             elif ready_runners_count > image.runner_pool_size:
+                from app.business.runner_management import shutdown_runners
                 # If there are excess ready runners, terminate the extra ones
                 runners_to_terminate = ready_runners_count - image.runner_pool_size
                 logger.info(f"Terminating {runners_to_terminate} extra runners for image {image.id}.")
@@ -46,7 +49,7 @@ def manage_runner_pool():
 
                 # Terminate the extra runners
                 instance_ids_to_terminate = [runner.identifier for runner in excess_runners]
-                shutdown_runners(instance_ids_to_terminate)
+                asyncio.run(shutdown_runners(instance_ids_to_terminate))
         
         session.commit()
 

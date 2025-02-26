@@ -44,24 +44,15 @@ async def launch_runners(image_identifier: str, runner_count: int):
     instance_ids = await asyncio.gather(*launch_tasks)
     launched_instance_ids.extend(instance_ids)
     
-    # 4) Wait concurrently for all instances to be in the "running" state.
-    wait_tasks = [asyncio.to_thread(wait_for_instance_running, instance_id) for instance_id in instance_ids]
-    await asyncio.gather(*wait_tasks)
-    
-    # 5) Retrieve the public IP addresses concurrently.
-    ip_tasks = [Describe_EC2(instance_id) for instance_id in instance_ids]
-    public_ips = await asyncio.gather(*ip_tasks)
-    
-    # 6) Create Runner records (using a new session for each record is safest to avoid session concurrency issues)
-    for instance_id, public_ip in zip(instance_ids, public_ips):
+    # 4) Create Runner records (using a new session for each record is safest to avoid session concurrency issues)
+    for instance_id in instance_ids:
         with Session(engine) as session:
             new_runner = Runner(
                 machine_id=db_machine.id,
                 image_id=db_image.id,
-                # No user assigned yet; this can be updated later.
-                user_id=None,
-                state="runner_starting",
-                url=public_ip or "",
+                user_id=None,  # No user assigned yet; this can be updated later.
+                state="runner_starting",  # State will be updated once EC2 is running
+                url="",  # Empty URL, will be updated later in the background job
                 token="",
                 identifier=instance_id,
                 external_hash=uuid.uuid4().hex,
@@ -74,7 +65,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
             session.commit()
             session.refresh(new_runner)
             
-            # Optionally, queue a Celery task to update runner state when needed.
+            # Optionally, queue a Celery task to update runner state when EC2 is ready
             update_runner_state.delay(new_runner.id, instance_id)
     
     return launched_instance_ids
