@@ -1,3 +1,4 @@
+# business/runner_management.py
 import uuid
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
@@ -59,7 +60,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
                 image_id=db_image.id,
                 # No user assigned yet; this can be updated later.
                 user_id=None,
-                state="ready",
+                state="runner_starting",
                 url=public_ip or "",
                 token="",
                 identifier=instance_id,
@@ -74,7 +75,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
             session.refresh(new_runner)
             
             # Optionally, queue a Celery task to update runner state when needed.
-            # update_runner_state.delay(new_runner.id, instance_id)
+            update_runner_state.delay(new_runner.id, instance_id)
     
     return launched_instance_ids
 

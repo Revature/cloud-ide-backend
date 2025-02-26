@@ -45,15 +45,15 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
         runner = session.exec(stmt_runner).first()
         
         # Poll up to 60 seconds (12 attempts, every 5 seconds)
-        # for _ in range(12):
-        #     with Session(engine) as poll_session:
-        #         stmt_runner = select(Runner).where(Runner.identifier == instance_id)
-        #         runner = poll_session.exec(stmt_runner).first()
-        #     if runner and runner.state == "ready":
-        #         break
-        #     await asyncio.sleep(5)
-        # if not runner or runner.state != "ready":
-        #     raise HTTPException(status_code=500, detail="Runner did not become ready in time")
+        for _ in range(12):
+            with Session(engine) as poll_session:
+                stmt_runner = select(Runner).where(Runner.identifier == instance_id)
+                runner = poll_session.exec(stmt_runner).first()
+            if runner and runner.state == "ready":
+                break
+            await asyncio.sleep(5)
+        if not runner or runner.state != "ready":
+            raise HTTPException(status_code=500, detail="Runner did not become ready in time")
     else:
         # Query for a runner in "ready" state for the given image.
         stmt_runner = select(Runner).where(Runner.state == "ready", Runner.image_id == request.image_id)
