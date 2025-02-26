@@ -4,7 +4,7 @@ from app.db.database import get_session, engine
 from app.models.runner import Runner
 from app.models.user import User
 from app.models.image import Image
-from app.business.encryption import encrypt_url
+from app.business.encryption import encrypt_text
 from pydantic import BaseModel
 from typing import Dict, Any
 from app.business.runner_management import launch_runners
@@ -112,7 +112,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     session.refresh(runner)
     
     # Encrypt the runner URL for safe transport.
-    # encrypted_url = encrypt_url(runner.url)
+    # encrypted_url = encrypt_text(runner.url)
     
     # If the pool size is not zero, launch a new runner asynchronously to replenish the pool.
     if db_image.runner_pool_size != 0:

@@ -1,12 +1,13 @@
 # business/runner_management.py
 import uuid
+import asyncio
 from datetime import datetime, timedelta
 from sqlmodel import Session, select
 from app.db.database import engine
 from app.models import Machine, Image, Runner, User
 from app.business.aws import Create_New_EC2, Describe_EC2, Stop_EC2, Terminate_EC2, wait_for_instance_running
-import asyncio
 from app.tasks.starting_runner import update_runner_state
+from app.business.key_management import get_daily_key
 
 async def launch_runners(image_identifier: str, runner_count: int):
     """
@@ -31,13 +32,20 @@ async def launch_runners(image_identifier: str, runner_count: int):
         db_machine = session.exec(stmt_machine).first()
         if not db_machine:
             raise Exception("Machine not found")
+        
+        # 3) Get or create today's key.
+    key_record = await get_daily_key()  # This function returns a Key model instance.
+    
+    if key_record is None:
+        raise Exception("Key not found or created")
     
     # 3) Launch all EC2 instances concurrently.
     launch_tasks = [
         Create_New_EC2(
             ImageId=db_image.identifier,
             InstanceType=db_machine.identifier,
-            InstanceCount=1
+            InstanceCount=1,
+            KeyName=key_record.key_name
         )
         for _ in range(runner_count)
     ]
@@ -51,6 +59,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
                 machine_id=db_machine.id,
                 image_id=db_image.id,
                 user_id=None,  # No user assigned yet; this can be updated later.
+                key_id=key_record.id,  # Associate the runner with today's key.
                 state="runner_starting",  # State will be updated once EC2 is running
                 url="",  # Empty URL, will be updated later in the background job
                 token="",
