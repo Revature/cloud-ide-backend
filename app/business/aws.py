@@ -8,18 +8,18 @@ from io import StringIO
 # Keypair Functionality
 ###################
 
-async def Create_New_Keypair() -> dict[str, str]:
+async def Create_New_Keypair(KeyName: str) -> dict[str, str]:
     """
-    Create a new keypair.
-    Returns the private key and keypair id as a dictionary of strings.
-    {'PrimaryKey':'Value', 'KeyPairId':'Value'}
+    Create a new keypair using the provided KeyName.
+    Returns a dictionary with the private key and keypair id.
+    Example: {'PrimaryKey': <private key>, 'KeyPairId': <keypair id>}
     """
     ec2 = boto3.client('ec2')
     try:
         response = ec2.create_key_pair(
-            KeyName="Keypair-" + datetime.datetime.now().strftime("%Y-%m-%d")
-            )
-        return {'PrimaryKey':response['KeyMaterial'], 'KeyPairId':response['KeyPairId']}
+            KeyName=KeyName
+        )
+        return {'PrimaryKey': response['KeyMaterial'], 'KeyPairId': response['KeyPairId']}
     except Exception as e:
         return str(e)
 

@@ -14,11 +14,11 @@ def encrypt_text(text: str) -> str:
     """
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
-        raise ValueError(f"{"ENCRYPTION_KEY"} environment variable is not set.")
+        raise ValueError("ENCRYPTION_KEY environment variable is not set.")
     
     key_bytes = key.encode("utf-8")
     if len(key_bytes) < 16:
-        raise ValueError(f"{"ENCRYPTION_KEY"} must be at least 16 bytes long.")
+        raise ValueError("ENCRYPTION_KEY must be at least 16 bytes long.")
     key_bytes = key_bytes[:16]
 
     # Use key_bytes as the IV (note: not recommended for production)
@@ -48,11 +48,11 @@ def decrypt_text(encrypted_text: str) -> str:
     """
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
-        raise ValueError(f"{"ENCRYPTION_KEY"} environment variable is not set.")
+        raise ValueError("ENCRYPTION_KEY environment variable is not set.")
     
     key_bytes = key.encode("utf-8")
     if len(key_bytes) < 16:
-        raise ValueError(f"{"ENCRYPTION_KEY"} must be at least 16 bytes long.")
+        raise ValueError("ENCRYPTION_KEY must be at least 16 bytes long.")
     key_bytes = key_bytes[:16]
 
     # Decode the encrypted text
