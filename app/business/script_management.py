@@ -29,44 +29,33 @@ def get_runner_key(runner_key_id: int) -> str:
     # Decrypt the key using the master encryption key.
     return decrypt_text(key_record.encrypted_key)
 
-def run_script_for_runner(event: str, runner_id: int) -> dict[str, str]:
+async def run_script_for_runner(event: str, runner_id: int) -> dict[str, str]:
     """
-    Retrieves the script for the given event and runner's image,
-    renders it using the runner's environment data, and uses SSH to run the script.
+    Retrieve the script for the given event and runner's image,
+    render it using the runner's env_data as context,
+    and use SSH to run the script on the runner.
     
-    Parameters:
-      - event: The lifecycle event (e.g., "on_create", "on_connect", "on_disconnect", "on_terminate").
-      - runner_id: The ID of the runner on which to run the script.
-    
-    Returns:
-      A dictionary with the SSH command output and error, e.g.:
-        {"Output": "...", "Error": "..."}
+    Returns a dictionary with the output and error.
     """
-    # Retrieve runner and script records.
+    # Create a new session for lookup.
     with Session(engine) as session:
         runner = session.get(Runner, runner_id)
         if not runner:
             raise Exception("Runner not found")
         
-        # Query for a script for the given event and runner's image.
+        # Query for the script corresponding to the event and runner's image.
         stmt = select(Script).where(Script.event == event, Script.image_id == runner.image_id)
         script_record = session.exec(stmt).first()
         if not script_record:
-            raise Exception(f"No script found for event '{event}' for image ID {runner.image_id}")
+            raise Exception(f"No script found for event '{event}' and image {runner.image_id}")
         
-        # Render the script template using runner.env_data as context.
-        # The script template should contain placeholders matching keys in runner.env_data.
-        rendered_script = render_script(script_record.script, runner.env_data)
+        # Render the script template using runner.env_data.
+        # We assume runner.env_data is a dict that contains variables used in the script.
+        rendered_script = render_script(script_record.script, runner.env_data.get("env", {}))
     
-    # Get the runner's public IP. (Assuming runner.url stores the public IP.)
-    runner_ip = runner.url
-    if not runner_ip:
-        raise Exception("Runner IP not set")
-    
-    # Retrieve and decrypt the private key for the runner.
+    # Retrieve the private key using runner.key_id.
     private_key = get_runner_key(runner.key_id)
     
-    # Run the script on the remote runner.
-    # SSH_Script is asynchronous; we run it synchronously here.
-    result = asyncio.run(SSH_Script(runner_ip, private_key, rendered_script))
+    # Use SSH_Script to run the rendered script on the runner.
+    result = await SSH_Script(runner.url, private_key, rendered_script)
     return result

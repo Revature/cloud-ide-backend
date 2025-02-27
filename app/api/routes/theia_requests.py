@@ -1,4 +1,3 @@
-# theia_requests.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from pydantic import BaseModel
@@ -7,7 +6,7 @@ from datetime import datetime
 from app.db.database import get_session
 from app.models.runner import Runner
 from app.models.runner_history import RunnerHistory
-from app.business.script_management import run_script_for_runner  # Business layer for script execution
+from app.business.script_management import run_script_for_runner  # Script management layer
 
 router = APIRouter()
 
@@ -17,7 +16,7 @@ class RunnerStateUpdate(BaseModel):
     token: Optional[str] = None
 
 @router.post("/update_state", response_model=Runner)
-def update_runner_state_endpoint(
+async def update_runner_state_endpoint(
     update: RunnerStateUpdate,
     session: Session = Depends(get_session)
 ):
@@ -101,14 +100,11 @@ def update_runner_state_endpoint(
     # Execute the script for this event if applicable.
     if script_event:
         try:
-            # run_script_for_runner returns a dict with script execution output.
-            script_result = run_script_for_runner(script_event, runner.id)
-            # Optionally update the history record with the script result.
+            script_result = await run_script_for_runner(script_event, runner.id)
             new_history.event_data["script_result"] = script_result
             session.add(new_history)
             session.commit()
         except Exception as e:
-            # You may want to log this error instead of printing.
             print(f"Error executing script for runner {runner.id}: {e}")
     
     return runner

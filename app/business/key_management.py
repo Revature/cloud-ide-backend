@@ -23,7 +23,7 @@ async def get_daily_key() -> Key:
             return key_record
 
     # Define the key name (e.g., "Keypair-YYYY-MM-DD")
-    key_name = f"Keypair-{today.strftime('%Y-%m-%d')}-testing-key"
+    key_name = f"Keypair-{today.strftime('%Y-%m-%d')}-ashoka-testing-key"
     
     try:
         # Attempt to create a new keypair with the key_name.

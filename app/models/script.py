@@ -1,8 +1,6 @@
 from __future__ import annotations
 from typing import Optional
-from datetime import datetime
-from sqlmodel import SQLModel, Field, Relationship
-from sqlalchemy.orm import Mapped
+from sqlmodel import SQLModel, Field, Column, TEXT
 from app.models.mixins import TimestampMixin
 from app.db import database
 
@@ -16,7 +14,7 @@ class Script(TimestampMixin, SQLModel, table=True):
     description: str
     event: str
     image_id: int = Field(foreign_key="image.id")
-    script: str
+    script: str = Field(sa_column=Column(TEXT, nullable=False))
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
 
@@ -25,7 +23,6 @@ class Script(TimestampMixin, SQLModel, table=True):
 # 2. on_awaiting_client
 # 3. on_connect
 # 4. on_disconnect
-# 5. on_terminate
 
 class ScriptUpdate(TimestampMixin, SQLModel):
     id: int

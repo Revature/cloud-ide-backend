@@ -319,27 +319,51 @@ async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
 # SSH Functionality
 ###################
 
-async def SSH_Script(IP, Key, Script, Username = 'ubuntu') -> dict[str, str]:
+
+async def SSH_Script(IP, Key, Script, Username='ubuntu') -> dict[str, str]:
     """
     Run the Script on the remote machine with the given IP address.
     Returns the output and error as a dictionary of strings.
-    {'Output':value, 'Error':value}
+    {'Output': value, 'Error': value}
     """
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     keyfile = StringIO(Key)
     private_key = paramiko.RSAKey.from_private_key(keyfile)
+    
+    print(f"[DEBUG] SSH_Script called with IP: {IP}, Username: {Username}")
+    print(f"[DEBUG] Script to execute: {Script}")
 
+    output = ""
+    error = ""
     try:
-        ssh.connect(hostname=IP, username=Username, pkey=private_key)
+        print("[DEBUG] Connecting to SSH...")
+        ssh.connect(hostname=IP, username=Username, pkey=private_key, timeout=30)
+        print("[DEBUG] SSH connection established.")
+
+        # Execute a test echo command to verify connectivity.
+        test_cmd = "echo 'Test Echo: SSH Connection Successful'"
+        print(f"[DEBUG] Executing test command: {test_cmd}")
+        stdin, stdout, stderr = ssh.exec_command(test_cmd)
+        test_output = stdout.read().decode().strip()
+        test_error = stderr.read().decode().strip()
+        print(f"[DEBUG] Test command output: {test_output}")
+        if test_error:
+            print(f"[DEBUG] Test command error: {test_error}")
+
+        # Execute the main script.
+        print("[DEBUG] Executing main script...")
         stdin, stdout, stderr = ssh.exec_command(Script)
         output = stdout.read().decode()
         error = stderr.read().decode()
-
+        print(f"[DEBUG] Main script output: {output}")
+        if error:
+            print(f"[DEBUG] Main script error: {error}")
     except Exception as e:
-        return str(e), error
-    
+        print(f"[ERROR] Exception during SSH execution: {e}")
+        return {'Output': str(e), 'Error': error}
     finally:
+        print("[DEBUG] Closing SSH connection.")
         ssh.close()
 
-    return {'Output':output, 'Error':error}
+    return {'Output': output, 'Error': error}
