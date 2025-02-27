@@ -60,3 +60,15 @@ async def get_daily_key() -> Key:
         session.commit()
         session.refresh(key_record)
         return key_record
+      
+def get_key_by_id(key_id: int) -> Key:
+    """
+    Retrieve the Key record from the database given its key_id.
+    Raises an exception if the key is not found.
+    """
+    with Session(engine) as session:
+        stmt = select(Key).where(Key.id == key_id)
+        key_record = session.exec(stmt).first()
+        if key_record is None:
+            raise Exception(f"Key record with id {key_id} not found.")
+        return key_record
