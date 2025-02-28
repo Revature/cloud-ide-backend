@@ -5,20 +5,20 @@ on: [push]
 jobs:
   pyre:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
       - name: Pyre Action
-        # You may pin to the exact commit or the version.
-        # uses: facebook/pyre-action@12b8d923443ea66cb657facc2e5faac1c8c86e64
         uses: facebook/pyre-action@v0.0.2
         with:
-          # Path to the python source code you want to type check. If you want to type check the root of your repo, use './'. A .pyre_configuration file should exist here, if not, a default configuration will be used.
-          repo-directory: ./app
+          # Path to the python source code you want to type check.
+          # If you want to type check the root of your repo, use './'. 
+          # A .pyre_configuration file should exist here, if not, a default configuration will be used.
+          repo-directory: ./
           # Path to requirements file, relative to `repo-directory`, to look for dependencies.
-          requirements-path: ./requirements.txt
+          requirements-path: requirements.txt
           # Use nightly (unstable) version of Pyre
           use-nightly: false
           # Version of pyre-check to be used. Default is latest.
