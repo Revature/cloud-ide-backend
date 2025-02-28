@@ -1,0 +1,18 @@
+name: Pysa
+
+on: [push]
+
+jobs:
+  pysa:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Run Pysa
+        uses: facebook/pysa-action
+        with:
+            repo-directory: './'
+            requirements-path: './requirements.txt'
+            infer-types: true
+            include-default-sapp-filters: true
