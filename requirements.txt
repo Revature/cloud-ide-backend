@@ -11,3 +11,4 @@ paramiko
 celery
 Jinja2
 redis
+ruff
