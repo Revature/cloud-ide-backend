@@ -1,5 +1,8 @@
 import os
 from celery import Celery
+import app.tasks.starting_runner
+import app.tasks.cleanup_runners
+import app.tasks.runner_pool_management
 
 REDIS_URL = os.getenv("REDIS_URL", "redis://localhost:6379/0")
 
@@ -10,10 +13,6 @@ celery_app = Celery(
 )
 
 celery_app.conf.timezone = "UTC"
-
-import app.tasks.starting_runner
-import app.tasks.cleanup_runners
-import app.tasks.runner_pool_management
 
 # Set up the beat schedule
 celery_app.conf.beat_schedule = {
