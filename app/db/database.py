@@ -1,5 +1,5 @@
 import os
-from sqlmodel import SQLModel, create_engine, Session
+from sqlmodel import SQLModel, create_engine, Session, select
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -9,21 +9,22 @@ load_dotenv()
 # For local testing, you can use SQLite:
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-print(DATABASE_URL)
-
 engine = create_engine(DATABASE_URL, echo=True)
 
 def create_db_and_tables():
-    # Import all models so that they are registered with SQLModel metadata
-    from app.models import user, machine, image, runner, role, user_role, script, runner_history
-    SQLModel.metadata.drop_all(engine)
+    # Import all models so that they are registered with SQLModel metadata.
+    from app.models import user, machine, image, runner, role, user_role, script, runner_history, key
+
+    # Create any tables that don't exist.
     SQLModel.metadata.create_all(engine)
-    role.populate_roles()
-
-
+    
+    # Populate roles only if they don't already exist.
+    with Session(engine) as session:
+        existing_role = session.exec(select(role.Role)).first()
+        if not existing_role:
+            role.populate_roles(session)  # Assuming populate_roles accepts a session.
     
 def get_session():
-    DATABASE_URL = os.getenv("DATABASE_URL")
-    engine = create_engine(DATABASE_URL, echo=True)
+    # Use the globally created engine.
     with Session(engine) as session:
         yield session
