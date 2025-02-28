@@ -31,7 +31,7 @@ services:
       - redis
 
   celery-beat:
-    build: .
+    image: /??
     container_name: celery-beat
     env_file:
       - .env
