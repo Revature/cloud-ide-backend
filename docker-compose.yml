@@ -1,0 +1,41 @@
+version: '3'
+services:
+  web:
+    build: .
+    container_name: web
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Mount your local ~/.aws into /root/.aws in the container, read-only
+      - ~/.aws:/root/.aws:ro
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      - redis
+
+  celery-worker:
+    build: .
+    container_name: celery-worker
+    env_file:
+      - .env
+    volumes:
+      - ~/.aws:/root/.aws:ro
+    command: celery -A app.celery_app.celery_app worker --loglevel=info
+    depends_on:
+      - redis
+
+  celery-beat:
+    build: .
+    container_name: celery-beat
+    env_file:
+      - .env
+    volumes:
+      - ~/.aws:/root/.aws:ro
+    command: celery -A app.celery_app.celery_app beat --loglevel=info
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:alpine
+    container_name: redis
