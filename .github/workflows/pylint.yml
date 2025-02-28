@@ -1,13 +1,10 @@
 name: Pylint
 
-on: [push]
+on: [workflow_dispatch]
 
 jobs:
     build:
         runs-on: ubuntu-latest
-        strategy:
-          matrix:
-              python-version: ["3.12"]
 
         steps:
             - name: Checkout
