@@ -1,6 +1,6 @@
 name: Pyre
 
-on: [push]
+on: [workflow_dispatch]
 
 jobs:
   pyre:
