@@ -74,7 +74,13 @@ async def Describe_KeyName(KeyPairId) -> str:
 ###################
 
 
-async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
+async def Create_New_EC2(
+        KeyName,
+        ImageId='ami-0bbfffa970b0280da',
+        InstanceType='t2.medium',
+        InstanceCount=1,
+        SecurityGroups=['sg-0f1d1e7f0e5d8936f']
+        ) -> str:
 #async def Create_New_EC2(ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
     """
     Create a new EC2 instance.
