@@ -14,7 +14,7 @@ async def get_daily_key() -> Key:
     saves the key record to the database, and returns it.
     """
     today = date.today()
-    
+
     # Check if today's key exists in the database.
     with Session(engine) as session:
         stmt = select(Key).where(Key.key_date == today)
@@ -24,7 +24,7 @@ async def get_daily_key() -> Key:
 
     # Define the key name (e.g., "Keypair-YYYY-MM-DD")
     key_name = f"Keypair-{today.strftime('%Y-%m-%d')}-ashoka-testing-key"
-    
+
     try:
         # Attempt to create a new keypair with the key_name.
         new_keypair = await Create_New_Keypair(KeyName=key_name)
@@ -60,7 +60,7 @@ async def get_daily_key() -> Key:
         session.commit()
         session.refresh(key_record)
         return key_record
-      
+
 def get_key_by_id(key_id: int) -> Key:
     """
     Retrieve the Key record from the database given its key_id.

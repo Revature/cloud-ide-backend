@@ -21,7 +21,7 @@ def update_runner_state(runner_id: int, instance_id: str):
         # 2. Retrieve the public IP of the EC2 instance.
         # Since Describe_EC2 is async, run it synchronously.
         public_ip = asyncio.run(Describe_EC2(instance_id))
-        
+
         # 3. Update the runner in the database.
         with Session(engine) as session:
             runner = session.get(Runner, runner_id)

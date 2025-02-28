@@ -19,7 +19,7 @@ def read_users(session: Session = Depends(get_session)):
     print(token_payload)
     users = session.exec(select(User)).all()
     return users
-  
+
 @router.get("/{user_id}", response_model=User)
 def read_user(user_id: int, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
@@ -29,7 +29,7 @@ def read_user(user_id: int, session: Session = Depends(get_session)):
             detail="User not found"
         )
     return user
-  
+
 @router.post("/", response_model=User)
 def create_user(user_create: UserCreate, session: Session = Depends(get_session)):
     # Create a new User instance from the UserCreate data.
@@ -37,7 +37,7 @@ def create_user(user_create: UserCreate, session: Session = Depends(get_session)
     session.add(user)
     session.commit()
     session.refresh(user)
-    
+
     # Automatically add the new user to the default user role.
     default_role = session.exec(select(Role).where(Role.name == "user")).first()
     if not default_role:
@@ -45,7 +45,7 @@ def create_user(user_create: UserCreate, session: Session = Depends(get_session)
         session.add(default_role)
         session.commit()
         session.refresh(default_role)
-    
+
     # Create a user-role mapping.
     user_role = UserRole(
         user_id=user.id,
@@ -55,9 +55,9 @@ def create_user(user_create: UserCreate, session: Session = Depends(get_session)
     )
     session.add(user_role)
     session.commit()
-    
+
     return user
-  
+
 @router.patch("/{user_id}", response_model=User)
 def update_user(user_id: int, user: User, session: Session = Depends(get_session)):
     db_user = session.get(User, user_id)
@@ -73,7 +73,7 @@ def update_user(user_id: int, user: User, session: Session = Depends(get_session
     session.commit()
     session.refresh(db_user)
     return db_user
-  
+
 @router.delete("/{user_id}", response_model=User)
 def delete_user(user_id: int, session: Session = Depends(get_session)):
     user = session.get(User, user_id)

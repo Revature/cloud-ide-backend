@@ -28,7 +28,7 @@ class ImageUpdate(TimestampMixin, SQLModel):
     name: str | None = None
     description: str | None = None
     identifier: str | None = None
-    
+
 def create_image(image: Image):
     with next(database.get_session()) as session:
         session.add(image)

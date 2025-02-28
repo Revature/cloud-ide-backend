@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped
 from app.models.mixins import TimestampMixin
 from app.db import database
 
-    
+
 # Relationships
 # images: Mapped[List["Image"]] = Relationship(back_populates="machine")
 # runners: Mapped[List["Runner"]] = Relationship(back_populates="machine")
@@ -21,7 +21,7 @@ class Machine(TimestampMixin, SQLModel, table=True):
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
 
-    
+
 class MachineUpdate(TimestampMixin, SQLModel):
     id: int
     name: str | None = None

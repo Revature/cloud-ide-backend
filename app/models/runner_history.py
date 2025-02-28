@@ -20,4 +20,4 @@ class RunnerHistory(TimestampMixin, SQLModel, table=True):
     )
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
-    
+

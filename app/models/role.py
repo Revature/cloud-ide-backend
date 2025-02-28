@@ -17,7 +17,7 @@ class Role(TimestampMixin, SQLModel, table=True):
     modified_by: None | str = Field(default="")
     created_by: None | str = Field(default="")
 
-    
+
 def populate_roles():
     # Use the get_session generator to obtain a session.
     session = next(get_session())

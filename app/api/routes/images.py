@@ -45,7 +45,7 @@ async def authentication_test(
 
     # Optionally, return a simple confirmation response
     return {"detail": "Authentication test: parameters printed to console."}
-            
+
 @router.get("/{image_id}", response_model=Image)
 def read_image(image_id: int, session: Session = Depends(get_session)):
     """
@@ -64,14 +64,14 @@ def update_image(image_id: int, updated_image: Image, session: Session = Depends
     image = session.get(Image, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
-    
+
     # Update fields; typically, you might want to limit which fields can be updated.
     image.name = updated_image.name
     image.description = updated_image.description
     image.identifier = updated_image.identifier
     image.modified_by = updated_image.modified_by
     # Optionally, you might update the modified_on automatically in your model's onupdate configuration.
-    
+
     session.add(image)
     session.commit()
     session.refresh(image)

@@ -31,7 +31,7 @@ def setup_resources():
             session.add(system_user)
             session.commit()
             session.refresh(system_user)
-        
+
         # 2) Fetch or create default Machine.
         stmt_machine = select(Machine).where(Machine.identifier == "t2.medium")
         db_machine = session.exec(stmt_machine).first()
@@ -48,7 +48,7 @@ def setup_resources():
             session.add(db_machine)
             session.commit()
             session.refresh(db_machine)
-        
+
         # 3) Fetch or create default Image.
         stmt_image = select(Image).where(Image.identifier == "ami-0bbfffa970b0280da")
         db_image = session.exec(stmt_image).first()
@@ -65,7 +65,7 @@ def setup_resources():
             session.add(db_image)
             session.commit()
             session.refresh(db_image)
-        
+
         # 4) Fetch or create default Script for the "on_awaiting_client" event.
         stmt_script = select(Script).where(Script.event == "on_awaiting_client", Script.image_id == db_image.id)
         default_script = session.exec(stmt_script).first()
@@ -95,7 +95,7 @@ fi""",
             session.add(default_script)
             session.commit()
             session.refresh(default_script)
-        
+
         return Resources(
             system_user_email=system_user.email,
             machine_id=db_machine.id,

@@ -26,11 +26,11 @@ async def update_runner_state_endpoint(
       - url: The URL of the runner (from AWS)
       - state: The new state
       - token (optional): an updated token when applicable.
-    
+
     For each state update, a RunnerHistory record is created. Additionally,
     if the state change corresponds to one of our script events, the corresponding
     script is executed on the runner.
-    
+
     Script event mapping:
       - app_starting  → on_create
       - ready         → no script
@@ -43,15 +43,15 @@ async def update_runner_state_endpoint(
     runner = session.exec(stmt).first()
     if not runner:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Runner not found")
-    
+
     # Prepare common event_data.
     event_data = {
         "timestamp": datetime.utcnow().isoformat(),
         "new_state": update.state
     }
-    
+
     script_event = None  # Default: no script execution.
-    
+
     # Map runner state to script event.
     if update.state == "app_starting":
         runner.state = "app_starting"
@@ -80,12 +80,12 @@ async def update_runner_state_endpoint(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid state: {update.state}"
         )
-    
+
     # Update the runner.
     session.add(runner)
     session.commit()
     session.refresh(runner)
-    
+
     # Create a runner history record.
     new_history = RunnerHistory(
         runner_id=runner.id,
@@ -96,7 +96,7 @@ async def update_runner_state_endpoint(
     )
     session.add(new_history)
     session.commit()
-    
+
     # Execute the script for this event if applicable.
     if script_event:
         try:
@@ -106,5 +106,5 @@ async def update_runner_state_endpoint(
             session.commit()
         except Exception as e:
             print(f"Error executing script for runner {runner.id}: {e}")
-    
+
     return runner

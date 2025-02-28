@@ -38,11 +38,11 @@ def extend_runner_session(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Runner not found"
         )
-    
+
     # Calculate the new session_end by adding extra_time.
     extension = timedelta(minutes=extend_req.extra_time)
     new_session_end = runner.session_end + extension
-    
+
     # Check that total session duration does not exceed 3 hours.
     total_duration = new_session_end - runner.session_start
     if total_duration > timedelta(hours=3):
@@ -50,14 +50,14 @@ def extend_runner_session(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Extension would exceed maximum allowed session time of 3 hours."
         )
-    
+
     # Save the old session_end for history logging.
     old_session_end = runner.session_end
-    
+
     # Update the runner's session_end.
     runner.session_end = new_session_end
     session.add(runner)
-    
+
     # Create a new runner_history record logging this extension event.
     event_data = {
         "extra_time": extend_req.extra_time,
@@ -72,7 +72,7 @@ def extend_runner_session(
         modified_by="system"
     )
     session.add(new_history)
-    
+
     session.commit()
     session.refresh(runner)
     return "Session extended successfully"

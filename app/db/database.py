@@ -17,13 +17,13 @@ def create_db_and_tables():
 
     # Create any tables that don't exist.
     SQLModel.metadata.create_all(engine)
-    
+
     # Populate roles only if they don't already exist.
     with Session(engine) as session:
         existing_role = session.exec(select(role.Role)).first()
         if not existing_role:
             role.populate_roles(session)  # Assuming populate_roles accepts a session.
-    
+
 def get_session():
     # Use the globally created engine.
     with Session(engine) as session:

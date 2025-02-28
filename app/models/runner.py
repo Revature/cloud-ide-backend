@@ -48,7 +48,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
     ended_on: Optional[datetime] = None
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
-    
+
     @property
     def is_alive_state(self) -> bool:
         """Returns True if the runner's state is considered 'alive'."""
@@ -58,7 +58,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
         }
         return self.state in alive_states
 
-    
+
 class RunnerUpdate(TimestampMixin, SQLModel):
     id: int
     state: str
@@ -69,7 +69,7 @@ class RunnerUpdate(TimestampMixin, SQLModel):
     session_start: datetime | None = None
     session_end: datetime | None = None
     ended_on: datetime | None = None
-    
+
 def create_runner(runner: Runner):
     with next(database.get_session()) as session:
         session.add(runner)

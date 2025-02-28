@@ -30,8 +30,8 @@ class ScriptUpdate(TimestampMixin, SQLModel):
     description: str | None = None
     event: str | None = None
     script: str | None = None
-    
-    
+
+
 def create_script(script: Script):
     with next(database.get_session()) as session:
         session.add(script)
@@ -57,4 +57,4 @@ def delete_script(script_id: int):
     with next(database.get_session()) as session:
         session.delete(script_id)
         session.commit()
-        
+

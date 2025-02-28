@@ -18,7 +18,7 @@ class UserRole(TimestampMixin, SQLModel, table=True):
     role_id: int = Field(foreign_key="role.id")
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
-        
+
 def assign_role(user: user.User, role_id: int):
     user_role: UserRole = UserRole(user_id = user.id, role_id = role_id)
     with next(get_session()) as session:
@@ -28,4 +28,4 @@ def assign_role(user: user.User, role_id: int):
 def remove_role(role_id: int):
     with next(get_session()) as session:
         session.delete(role_id)
-        
+

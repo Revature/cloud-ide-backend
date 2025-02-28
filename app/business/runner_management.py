@@ -17,7 +17,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
     Returns a list of launched instance IDs.
     """
     launched_instance_ids = []
-    
+
     # Open one DB session for reading resources.
     with Session(engine) as session:
         # 1) Fetch the Image.
@@ -25,7 +25,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
         db_image = session.exec(stmt_image).first()
         if not db_image:
             raise Exception("Image not found")
-        
+
         # 2) Fetch the Machine associated with the image.
         if db_image.machine_id is None:
             raise Exception("No machine associated with the image")
@@ -33,12 +33,12 @@ async def launch_runners(image_identifier: str, runner_count: int):
         db_machine = session.exec(stmt_machine).first()
         if not db_machine:
             raise Exception("Machine not found")
-    
+
     # 3) Get or create today's key.
     key_record = await get_daily_key()  # Returns a Key model instance.
     if key_record is None:
         raise Exception("Key not found or created")
-    
+
     # 4) Launch all EC2 instances concurrently.
     launch_tasks = [
         Create_New_EC2(
@@ -51,7 +51,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
     ]
     instance_ids = await asyncio.gather(*launch_tasks)
     launched_instance_ids.extend(instance_ids)
-    
+
     # 5) Create Runner records (URL will be updated later by a background job).
     for instance_id in instance_ids:
         with Session(engine) as session:
@@ -73,10 +73,10 @@ async def launch_runners(image_identifier: str, runner_count: int):
             session.add(new_runner)
             session.commit()
             session.refresh(new_runner)
-            
+
             # Queue a Celery task to update runner state when EC2 is ready.
             update_runner_state.delay(new_runner.id, instance_id)
-    
+
     return launched_instance_ids
 
 async def shutdown_runners(launched_instance_ids: list):
@@ -87,7 +87,7 @@ async def shutdown_runners(launched_instance_ids: list):
     for instance_id in launched_instance_ids:
         # 1) Stop the EC2 instance.
         stop_state = await Stop_EC2(instance_id)
-        
+
         # After stopping, update the runner state to "closed".
         with Session(engine) as session:
             stmt = select(Runner).where(Runner.identifier == instance_id)
@@ -100,10 +100,10 @@ async def shutdown_runners(launched_instance_ids: list):
                 print(f"Runner {runner.id} updated to 'closed'.")
             else:
                 print(f"Runner with instance identifier {instance_id} not found (stop update).")
-        
+
         # 2) Terminate the EC2 instance.
         terminate_state = await Terminate_EC2(instance_id)
-        
+
         # After termination, update the runner state to "terminated".
         with Session(engine) as session:
             stmt = select(Runner).where(Runner.identifier == instance_id)

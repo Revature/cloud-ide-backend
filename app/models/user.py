@@ -29,7 +29,7 @@ class UserUpdate(TimestampMixin, SQLModel):
 def get_user(user_id: int):
     with next(get_session()) as session:
         return session.get(User, user_id)
-    
+
 # In my mind there should be another step between the routes and models, like a service layer.
 # The service would call create_user() here, and then after that's complete would call assign_role() to
 # fill in the reference in the junction table -Kyle
@@ -40,7 +40,7 @@ def create_user(user: User):
         session.refresh(user)
         user_role.assign_role(user, 2) # Default to "user" role
         return user
-        
+
 def update_user(user: UserUpdate):
     with next(get_session()) as session:
         user_from_db = session.get(User, user.id)
@@ -50,7 +50,7 @@ def update_user(user: UserUpdate):
         session.commit()
         session.refresh(user_from_db)
         return user_from_db
-    
+
 def delete_user(user_id: int):
     with next(get_session()) as session:
         user = get_user(user_id)

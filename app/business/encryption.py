@@ -16,7 +16,7 @@ def encrypt_text(text: str) -> str:
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
         raise ValueError("ENCRYPTION_KEY environment variable is not set.")
-    
+
     key_bytes = key.encode("utf-8")
     if len(key_bytes) < 16:
         raise ValueError("ENCRYPTION_KEY must be at least 16 bytes long.")
@@ -44,7 +44,7 @@ def decrypt_text(encrypted_text: str) -> str:
     Decrypts the given URL-safe Base64 encoded string that was encrypted
     with AES-128 CBC mode with PKCS7 padding. Uses the key from the specified
     environment variable (default: ENCRYPTION_KEY).
-    
+
     Expects that the first 16 bytes of the decoded data are the IV.
     Returns the original plaintext.
     """
@@ -52,7 +52,7 @@ def decrypt_text(encrypted_text: str) -> str:
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
         raise ValueError("ENCRYPTION_KEY environment variable is not set.")
-    
+
     key_bytes = key.encode("utf-8")
     if len(key_bytes) < 16:
         raise ValueError("ENCRYPTION_KEY must be at least 16 bytes long.")

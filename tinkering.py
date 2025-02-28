@@ -44,11 +44,11 @@ app.include_router(app_requests.router, prefix="/app/v1/app_requests", tags=["ap
 # @app.post("/users")
 # def post(user: User):
 #     return create_user(user)
-    
+
 # @app.put("/users")
 # def put(userUpdate: UserUpdate):
 #     return update_user(userUpdate)
- 
+
 
 # @app.delete("/users/{id}")
 # def read_root(id: int):
@@ -58,4 +58,4 @@ app.include_router(app_requests.router, prefix="/app/v1/app_requests", tags=["ap
 # @app.delete("/resetdb")
 # def reset_db():
 #     create_db_and_tables()
-    
+
