@@ -1,8 +1,8 @@
 # aws.py
-import boto3
 import datetime
-import paramiko
 from io import StringIO
+import boto3
+import paramiko
 
 ###################
 # Keypair Functionality
@@ -52,7 +52,7 @@ async def Describe_KeyPairId(KeyName) -> str:
         return response['KeyPairs'][0]['KeyPairId']
     except Exception as e:
         return str(e)
-    
+
 
 async def Describe_KeyName(KeyPairId) -> str:
     """
@@ -67,14 +67,11 @@ async def Describe_KeyName(KeyPairId) -> str:
         return response['KeyPairs'][0]['KeyName']
     except Exception as e:
         return str(e)
-    
+
 
 ###################
 # EC2 Functionality
 ###################
-
-# 'ami-01c42560340a40285' - Ubuntu 24.04 LTS arm64
-# 'ami-0991721486ed52a2c' - Ubuntu 24.04 LTS x86_64
 
 
 async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
@@ -151,7 +148,7 @@ async def Stop_EC2(InstanceId) -> str:
             )
         return response['StoppingInstances'][0]['CurrentState']['Name']
     except Exception as e:
-        return str(e)   
+        return str(e)
 
 
 # Future Work: Terminate multiple instances at once -> InstanceId -> InstanceIds
@@ -185,7 +182,7 @@ async def Terminate_EC2(InstanceId) -> str:
         return response['TerminatingInstances'][0]['CurrentState']['Name']
     except Exception as e:
         return str(e)
-    
+
 
 def wait_for_instance_running(instance_id: str, region: str = "us-west-2") -> None:
     """
@@ -214,7 +211,7 @@ async def Create_New_S3_Bucket(BucketName) -> str:
         return response['Location']
     except Exception as e:
         return str(e)
-    
+
 
 async def Delete_S3_Bucket(BucketName) -> str:
     """
@@ -229,7 +226,7 @@ async def Delete_S3_Bucket(BucketName) -> str:
         return response['ResponseMetadata']['HTTPStatusCode']
     except Exception as e:
         return str(e)
-    
+
 
 async def List_S3_Buckets() -> list[str]:
     """
