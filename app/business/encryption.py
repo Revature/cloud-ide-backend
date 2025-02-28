@@ -12,6 +12,7 @@ def encrypt_text(text: str) -> str:
     The IV is set to be the same as the key (truncated to 16 bytes).
     Returns a URL-safe Base64 encoded string of IV + ciphertext.
     """
+    print("Encrypting text")
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
         raise ValueError("ENCRYPTION_KEY environment variable is not set.")
@@ -35,6 +36,7 @@ def encrypt_text(text: str) -> str:
     ciphertext = encryptor.update(padded_data) + encryptor.finalize()
 
     encrypted = iv + ciphertext
+    print("Encrypted text")
     return base64.urlsafe_b64encode(encrypted).decode("utf-8")
 
 def decrypt_text(encrypted_text: str) -> str:
@@ -46,6 +48,7 @@ def decrypt_text(encrypted_text: str) -> str:
     Expects that the first 16 bytes of the decoded data are the IV.
     Returns the original plaintext.
     """
+    print("Decrypting text")
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
         raise ValueError("ENCRYPTION_KEY environment variable is not set.")
@@ -68,4 +71,5 @@ def decrypt_text(encrypted_text: str) -> str:
     # Unpad the plaintext
     unpadder = padding.PKCS7(128).unpadder()
     plaintext_bytes = unpadder.update(padded_plaintext) + unpadder.finalize()
+    print("Decrypted text")
     return plaintext_bytes.decode("utf-8")

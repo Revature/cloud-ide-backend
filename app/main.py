@@ -1,4 +1,3 @@
-# main.py
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
@@ -16,15 +15,18 @@ async def lifespan(app: FastAPI):
     # Create DB and tables
     create_db_and_tables()
 
+    # Fetch default resources.
     resources = setup_resources()
-    image_identifier = resources.db_image.identifier
-    runner_count = resources.db_image.runner_pool_size
+    image_identifier = resources.image_identifier
+    runner_count = resources.runner_pool_size  # from the updated Resources dataclass
+
+    # Launch new runners as per the pool size.
     await launch_runners(image_identifier, runner_count)
 
-    # Yield so the app can start serving requests
+    # Yield so the app can start serving requests.
     yield
 
-    # On shutdown: terminate all alive runners
+    # On shutdown: terminate all alive runners.
     await shutdown_all_runners()
 
 app = FastAPI(lifespan=lifespan)
@@ -33,4 +35,3 @@ app.include_router(api_router)
 @app.get("/")
 def read_root():
     return {"message": "Hello, welcome to the cloud ide dev backend!"}
-

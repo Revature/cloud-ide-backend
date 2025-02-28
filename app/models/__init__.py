@@ -8,3 +8,4 @@ from app.models.runner import Runner
 from app.models.script import Script
 from app.models.user_role import UserRole
 from app.models.user import User
+from app.models.key import Key

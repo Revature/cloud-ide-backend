@@ -1,8 +1,8 @@
 # aws.py
-import boto3
 import datetime
-import paramiko
 from io import StringIO
+import boto3
+import paramiko
 
 ###################
 # Keypair Functionality
@@ -52,7 +52,7 @@ async def Describe_KeyPairId(KeyName) -> str:
         return response['KeyPairs'][0]['KeyPairId']
     except Exception as e:
         return str(e)
-    
+
 
 async def Describe_KeyName(KeyPairId) -> str:
     """
@@ -67,14 +67,11 @@ async def Describe_KeyName(KeyPairId) -> str:
         return response['KeyPairs'][0]['KeyName']
     except Exception as e:
         return str(e)
-    
+
 
 ###################
 # EC2 Functionality
 ###################
-
-# 'ami-01c42560340a40285' - Ubuntu 24.04 LTS arm64
-# 'ami-0991721486ed52a2c' - Ubuntu 24.04 LTS x86_64
 
 
 async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
@@ -92,7 +89,7 @@ async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType=
             MaxCount=InstanceCount,
             KeyName=KeyName,
             SecurityGroupIds=SecurityGroups,
-            TagSpecifications=[ 
+            TagSpecifications=[
                 {
                     'ResourceType': 'instance',
                     'Tags': [
@@ -151,7 +148,7 @@ async def Stop_EC2(InstanceId) -> str:
             )
         return response['StoppingInstances'][0]['CurrentState']['Name']
     except Exception as e:
-        return str(e)   
+        return str(e)
 
 
 # Future Work: Terminate multiple instances at once -> InstanceId -> InstanceIds
@@ -185,7 +182,7 @@ async def Terminate_EC2(InstanceId) -> str:
         return response['TerminatingInstances'][0]['CurrentState']['Name']
     except Exception as e:
         return str(e)
-    
+
 
 def wait_for_instance_running(instance_id: str, region: str = "us-west-2") -> None:
     """
@@ -214,7 +211,7 @@ async def Create_New_S3_Bucket(BucketName) -> str:
         return response['Location']
     except Exception as e:
         return str(e)
-    
+
 
 async def Delete_S3_Bucket(BucketName) -> str:
     """
@@ -229,7 +226,7 @@ async def Delete_S3_Bucket(BucketName) -> str:
         return response['ResponseMetadata']['HTTPStatusCode']
     except Exception as e:
         return str(e)
-    
+
 
 async def List_S3_Buckets() -> list[str]:
     """
@@ -319,27 +316,51 @@ async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
 # SSH Functionality
 ###################
 
-async def SSH_Script(IP, Key, Script, Username = 'ubuntu') -> dict[str, str]:
+
+async def SSH_Script(IP, Key, Script, Username='ubuntu') -> dict[str, str]:
     """
     Run the Script on the remote machine with the given IP address.
     Returns the output and error as a dictionary of strings.
-    {'Output':value, 'Error':value}
+    {'Output': value, 'Error': value}
     """
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     keyfile = StringIO(Key)
     private_key = paramiko.RSAKey.from_private_key(keyfile)
 
+    print(f"[DEBUG] SSH_Script called with IP: {IP}, Username: {Username}")
+    print(f"[DEBUG] Script to execute: {Script}")
+
+    output = ""
+    error = ""
     try:
-        ssh.connect(hostname=IP, username=Username, pkey=private_key)
+        print("[DEBUG] Connecting to SSH...")
+        ssh.connect(hostname=IP, username=Username, pkey=private_key, timeout=30)
+        print("[DEBUG] SSH connection established.")
+
+        # Execute a test echo command to verify connectivity.
+        test_cmd = "echo 'Test Echo: SSH Connection Successful'"
+        print(f"[DEBUG] Executing test command: {test_cmd}")
+        stdin, stdout, stderr = ssh.exec_command(test_cmd)
+        test_output = stdout.read().decode().strip()
+        test_error = stderr.read().decode().strip()
+        print(f"[DEBUG] Test command output: {test_output}")
+        if test_error:
+            print(f"[DEBUG] Test command error: {test_error}")
+
+        # Execute the main script.
+        print("[DEBUG] Executing main script...")
         stdin, stdout, stderr = ssh.exec_command(Script)
         output = stdout.read().decode()
         error = stderr.read().decode()
-
+        print(f"[DEBUG] Main script output: {output}")
+        if error:
+            print(f"[DEBUG] Main script error: {error}")
     except Exception as e:
-        return str(e), error
-    
+        print(f"[ERROR] Exception during SSH execution: {e}")
+        return {'Output': str(e), 'Error': error}
     finally:
+        print("[DEBUG] Closing SSH connection.")
         ssh.close()
 
-    return {'Output':output, 'Error':error}
+    return {'Output': output, 'Error': error}

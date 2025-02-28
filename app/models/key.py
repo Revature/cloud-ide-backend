@@ -6,6 +6,7 @@ from sqlalchemy import UniqueConstraint
 from app.models.mixins import TimestampMixin
 
 class Key(TimestampMixin, SQLModel, table=True):
+    __tablename__ = "key"
     __table_args__ = (UniqueConstraint("key_date"),)
 
     id: Optional[int] = Field(default=None, primary_key=True)

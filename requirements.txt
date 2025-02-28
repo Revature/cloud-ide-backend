@@ -9,3 +9,5 @@ email-validator
 cryptography
 paramiko
 celery
+Jinja2
+ruff
