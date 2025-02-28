@@ -657,10 +657,8 @@ redefining-builtins-modules = [
 #################
 ## Ruff Config ##
 #################
-[tool.ruff]
 
-# ruff is less lenient than pylint and does not make any exceptions
-# (for docstrings, strings and comments in particular).
+[tool.ruff]
 line-length = 150
 
 # List of default exclusions for reference
