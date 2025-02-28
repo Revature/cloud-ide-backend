@@ -77,7 +77,7 @@ async def update_runner_state_endpoint(
         script_event = "on_disconnect"
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid state: {update.state}"
         )
     

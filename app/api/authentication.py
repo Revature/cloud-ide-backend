@@ -14,7 +14,7 @@ load_dotenv()
 
 # Initialize the WorkOSClient using environment variables (or hardcode for testing)
 workos_client = WorkOSClient(
-    api_key=os.getenv("WORKOS_API_KEY"), 
+    api_key=os.getenv("WORKOS_API_KEY"),
     client_id=os.getenv("WORKOS_CLIENT_ID")
 )
 

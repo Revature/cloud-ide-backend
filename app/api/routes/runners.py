@@ -5,11 +5,11 @@ from datetime import timedelta
 from app.db.database import get_session
 from app.models.runner import Runner
 from app.models.runner_history import RunnerHistory
-from app.schemas.runner import ExtendSessionRequest 
+from app.schemas.runner import ExtendSessionRequest
 
 router = APIRouter()
 
-@router.get("/", response_model=List[Runner]) 
+@router.get("/", response_model=List[Runner])
 def read_runners(session: Session = Depends(get_session)):
     """
     Retrieve a list of all Runners.

@@ -26,7 +26,7 @@ def read_images(session: Session = Depends(get_session)):
 
 @router.post("/authentication_test", status_code=status.HTTP_201_CREATED)
 async def authentication_test(
-    request: Request, 
+    request: Request,
     session: Session = Depends(get_session)
 ):
     """

@@ -81,7 +81,7 @@ async def launch_runners(image_identifier: str, runner_count: int):
 
 async def shutdown_runners(launched_instance_ids: list):
     """Stop and then terminate all EC2 instances given in launched_instance_ids.
-    Update the corresponding Runner record to "closed" after stopping and to 
+    Update the corresponding Runner record to "closed" after stopping and to
     "terminated" after termination.
     """
     for instance_id in launched_instance_ids:

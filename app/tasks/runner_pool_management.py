@@ -13,7 +13,7 @@ logger = get_task_logger(__name__)
 @celery_app.task
 def manage_runner_pool():
     """
-    Task that manages the runner pool for each image. 
+    Task that manages the runner pool for each image.
     Ensures the number of "ready" runners matches the configured runner_pool_size for each image.
     """
     logger.info("Starting runner pool management task.")

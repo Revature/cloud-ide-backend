@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from app.db.database import get_session
 from app.models.user import User
 from app.schemas.user import UserCreate
-from app.api.authentication import verify_workos_token 
+from app.api.authentication import verify_workos_token
 
 # We'll need to import Role and UserRole when creating a user.
 from app.models.role import Role
@@ -25,7 +25,7 @@ def read_user(user_id: int, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     return user
@@ -48,9 +48,9 @@ def create_user(user_create: UserCreate, session: Session = Depends(get_session)
     
     # Create a user-role mapping.
     user_role = UserRole(
-        user_id=user.id, 
-        role_id=default_role.id, 
-        created_by="system", 
+        user_id=user.id,
+        role_id=default_role.id,
+        created_by="system",
         modified_by="system"
     )
     session.add(user_role)
@@ -63,7 +63,7 @@ def update_user(user_id: int, user: User, session: Session = Depends(get_session
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     update_data = user.dict(exclude_unset=True)
@@ -79,7 +79,7 @@ def delete_user(user_id: int, session: Session = Depends(get_session)):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     session.delete(user)
