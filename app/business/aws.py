@@ -89,7 +89,7 @@ async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType=
             MaxCount=InstanceCount,
             KeyName=KeyName,
             SecurityGroupIds=SecurityGroups,
-            TagSpecifications=[ 
+            TagSpecifications=[
                 {
                     'ResourceType': 'instance',
                     'Tags': [
@@ -327,7 +327,7 @@ async def SSH_Script(IP, Key, Script, Username='ubuntu') -> dict[str, str]:
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     keyfile = StringIO(Key)
     private_key = paramiko.RSAKey.from_private_key(keyfile)
-    
+
     print(f"[DEBUG] SSH_Script called with IP: {IP}, Username: {Username}")
     print(f"[DEBUG] Script to execute: {Script}")
 
