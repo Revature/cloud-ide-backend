@@ -24,4 +24,4 @@ jobs:
                 pip install pylint
 
             - name: Analyze with Pylint
-              run: pylint $(git ls-files '*.py')
+              run: pylint -ry $(git ls-files '*.py')
