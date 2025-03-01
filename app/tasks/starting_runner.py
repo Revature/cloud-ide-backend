@@ -14,7 +14,7 @@ from app.business.aws import wait_for_instance_running, Describe_EC2
 def update_runner_state(runner_id: int, instance_id: str):
     """
     Update runner state.
-    
+
     Wait for the EC2 instance to become 'running',
     update the runner's state to 'ready',
     set the runner's URL, and record the event in RunnerHistory.

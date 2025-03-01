@@ -16,7 +16,7 @@ def create_machine(machine: Machine, session: Session = Depends(get_session)):
     session.refresh(machine)
     return machine
 
-@router.get("/", response_model=List[Machine])
+@router.get("/", response_model=list[Machine])
 def read_machines(session: Session = Depends(get_session)):
     """Retrieve a list of all Machines."""
     machines = session.exec(select(Machine)).all()

@@ -16,7 +16,7 @@ def create_image(image: Image, session: Session = Depends(get_session)):
     session.refresh(image)
     return image
 
-@router.get("/", response_model=List[Image])
+@router.get("/", response_model=list[Image])
 def read_images(session: Session = Depends(get_session)):
     """Retrieve a list of all Images."""
     images = session.exec(select(Image)).all()

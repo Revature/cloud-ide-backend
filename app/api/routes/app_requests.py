@@ -20,12 +20,12 @@ class RunnerRequest(BaseModel):
     """Request model for the get_ready_runner endpoint."""
 
     image_id: int
-    env_data: Dict[str, Any]
+    env_data: dict[str, Any]
     user_email: str
     session_time: int  # in minutes, limit to 3 hours
     runner_type: str   # temporary/permanent
 
-@router.post("/", response_model=Dict[str, str])
+@router.post("/", response_model=dict[str, str])
 async def get_ready_runner(request: RunnerRequest, session: Session = Depends(get_session)):
     """
     Retrieve a runner with the "ready" state for the given image and assign it to a user.

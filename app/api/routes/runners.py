@@ -11,7 +11,7 @@ from app.schemas.runner import ExtendSessionRequest
 
 router = APIRouter()
 
-@router.get("/", response_model=List[Runner])
+@router.get("/", response_model=list[Runner])
 def read_runners(session: Session = Depends(get_session)):
     """Retrieve a list of all Runners."""
     runners = session.exec(select(Runner)).all()

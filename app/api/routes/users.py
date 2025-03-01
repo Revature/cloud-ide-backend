@@ -14,7 +14,7 @@ from app.models.user_role import UserRole
 
 router = APIRouter()
 
-@router.get("/", response_model=List[User])
+@router.get("/", response_model=list[User])
 def read_users(session: Session = Depends(get_session)):
     """Retrieve all users."""
     token_payload: dict = Depends(verify_workos_token)

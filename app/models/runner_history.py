@@ -18,7 +18,7 @@ class RunnerHistory(TimestampMixin, SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     runner_id: int = Field(foreign_key="runner.id")
     event_name: str
-    event_data: Dict[str, Any] = Field(
+    event_data: dict[str, Any] = Field(
         default={},
         sa_column=Column(JSON, nullable=False)
     )

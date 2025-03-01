@@ -43,7 +43,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
     token: str
     identifier: str
     external_hash: str
-    env_data: Dict[str, Any] = Field(
+    env_data: dict[str, Any] = Field(
         default={},
         sa_column=Column(JSON, nullable=False)
     )
@@ -71,7 +71,7 @@ class RunnerUpdate(TimestampMixin, SQLModel):
     url: str
     token: str
     external_hash: str
-    env_data: Dict[str, Any] | None = None
+    env_data: dict[str, Any] | None = None
     session_start: datetime | None = None
     session_end: datetime | None = None
     ended_on: datetime | None = None
