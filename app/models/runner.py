@@ -1,7 +1,7 @@
 """Runner model."""
 
 from __future__ import annotations
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, JSON
@@ -33,11 +33,11 @@ from app.db import database
 class Runner(TimestampMixin, SQLModel, table=True):
     """Runner model for the application."""
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     machine_id: int = Field(foreign_key="machine.id")
     image_id: int = Field(foreign_key="image.id")
-    user_id: Optional[int] = Field(default=None, foreign_key="user.id")
-    key_id: Optional[int] = Field(default=None, foreign_key="key.id")
+    user_id: int | None = Field(default=None, foreign_key="user.id")
+    key_id: int | None = Field(default=None, foreign_key="key.id")
     state: str
     url: str
     token: str
@@ -47,9 +47,9 @@ class Runner(TimestampMixin, SQLModel, table=True):
         default={},
         sa_column=Column(JSON, nullable=False)
     )
-    session_start: Optional[datetime] = None
-    session_end: Optional[datetime] = None
-    ended_on: Optional[datetime] = None
+    session_start: datetime | None = None
+    session_end: datetime | None = None
+    ended_on: datetime | None = None
     modified_by: str = Field(default="")
     created_by: str = Field(default="")
 

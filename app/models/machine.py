@@ -1,7 +1,7 @@
 """Machine model."""
 
 from __future__ import annotations
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy.orm import Mapped
@@ -16,7 +16,7 @@ from app.db import database
 class Machine(TimestampMixin, SQLModel, table=True):
     """Machine model."""
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     identifier: str
     cpu_count: int

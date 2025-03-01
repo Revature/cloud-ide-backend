@@ -1,7 +1,7 @@
 """User model."""
 
 from __future__ import annotations
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy.orm import Mapped

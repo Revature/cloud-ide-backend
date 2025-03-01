@@ -1,7 +1,7 @@
 """Runner History model."""
 
 from __future__ import annotations
-from typing import Optional, Dict, Any
+from typing import Optional, Any
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import Column, JSON
@@ -15,7 +15,7 @@ class RunnerHistory(TimestampMixin, SQLModel, table=True):
     """Runner History model for the application."""
 
     __tablename__ = "runner_history"
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     runner_id: int = Field(foreign_key="runner.id")
     event_name: str
     event_data: dict[str, Any] = Field(

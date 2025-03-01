@@ -12,7 +12,7 @@ from app.db import database
 class Script(TimestampMixin, SQLModel, table=True):
     """Script model."""
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     description: str
     event: str

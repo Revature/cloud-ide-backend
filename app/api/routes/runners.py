@@ -1,6 +1,5 @@
 """Runners API routes."""
 
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from datetime import timedelta

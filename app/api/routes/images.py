@@ -1,6 +1,5 @@
 """Images API routes."""
 
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session, select
 from app.db.database import get_session

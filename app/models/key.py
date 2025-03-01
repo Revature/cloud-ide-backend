@@ -13,7 +13,7 @@ class Key(TimestampMixin, SQLModel, table=True):
     __tablename__ = "key"
     __table_args__ = (UniqueConstraint("key_date"),)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int | None = Field(default=None, primary_key=True)
     key_date: date = Field(nullable=False, index=True)
     key_pair_id: str = Field(nullable=False)
     key_name: str = Field(nullable=False)

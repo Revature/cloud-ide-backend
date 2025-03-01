@@ -1,7 +1,7 @@
 """Role model for the application."""
 
 from __future__ import annotations
-from typing import List, Optional
+from typing import Optional
 from datetime import datetime
 from sqlmodel import SQLModel, Field, Relationship, select
 from sqlalchemy.orm import Mapped

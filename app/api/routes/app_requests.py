@@ -3,7 +3,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from pydantic import BaseModel
-from typing import Dict, Any
+from typing import Any
 from datetime import datetime, timedelta
 from app.db.database import get_session, engine
 from app.models.runner import Runner
