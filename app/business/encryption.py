@@ -1,4 +1,6 @@
 # business/encryption.py
+"""Module for encrypting and decrypting text using AES-128 CBC mode with PKCS7 padding."""
+
 import os
 import base64
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
@@ -8,6 +10,7 @@ from cryptography.hazmat.backends import default_backend
 def encrypt_text(text: str) -> str:
     """
     Encrypts the given text using AES-128 CBC mode with PKCS7 padding.
+
     Uses the key from the specified environment variable (default: ENCRYPTION_KEY).
     The IV is set to be the same as the key (truncated to 16 bytes).
     Returns a URL-safe Base64 encoded string of IV + ciphertext.
@@ -41,10 +44,9 @@ def encrypt_text(text: str) -> str:
 
 def decrypt_text(encrypted_text: str) -> str:
     """
-    Decrypts the given URL-safe Base64 encoded string that was encrypted
-    with AES-128 CBC mode with PKCS7 padding. Uses the key from the specified
-    environment variable (default: ENCRYPTION_KEY).
+    Decrypts the given URL-safe Base64 encoded string that was encrypted with AES-128 CBC mode with PKCS7 padding.
 
+    Uses the key from the specified environment variable (default: ENCRYPTION_KEY).
     Expects that the first 16 bytes of the decoded data are the IV.
     Returns the original plaintext.
     """

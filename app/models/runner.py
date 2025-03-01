@@ -1,3 +1,5 @@
+"""Runner model."""
+
 from __future__ import annotations
 from typing import Optional, Dict, Any
 from datetime import datetime
@@ -29,6 +31,8 @@ from app.db import database
 # runner_histories: Mapped[List["RunnerHistory"]] = Relationship(back_populates="runner")
 
 class Runner(TimestampMixin, SQLModel, table=True):
+    """Runner model for the application."""
+
     id: Optional[int] = Field(default=None, primary_key=True)
     machine_id: int = Field(foreign_key="machine.id")
     image_id: int = Field(foreign_key="image.id")
@@ -51,7 +55,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
 
     @property
     def is_alive_state(self) -> bool:
-        """Returns True if the runner's state is considered 'alive'."""
+        """Return True if the runner's state is considered 'alive'."""
         alive_states = {
             "runner_starting", "app_starting", "ready", "setup",
             "awaiting_client", "active", "disconnecting", "disconnected"
@@ -60,6 +64,8 @@ class Runner(TimestampMixin, SQLModel, table=True):
 
 
 class RunnerUpdate(TimestampMixin, SQLModel):
+    """Runner update model."""
+
     id: int
     state: str
     url: str
@@ -71,12 +77,14 @@ class RunnerUpdate(TimestampMixin, SQLModel):
     ended_on: datetime | None = None
 
 def create_runner(runner: Runner):
+    """Create a runner record in the database."""
     with next(database.get_session()) as session:
         session.add(runner)
         session.refresh()
     return runner
 
 def update_runner(runner: RunnerUpdate):
+    """Update a runner record in the database."""
     with next(database.get_session()) as session:
         runner_from_db = session.get(Runner, runner.id)
         runner_data = runner.model_dump(exclude_unset=True)
@@ -88,10 +96,12 @@ def update_runner(runner: RunnerUpdate):
 
 
 def get_runner(runner_id: int):
+    """Get a runner record from the database."""
     with next(database.get_session()) as session:
         return session.get(Runner, runner_id)
 
 def delete_runner(runner_id: int):
+    """Delete a runner record from the database."""
     with next(database.get_session()) as session:
         session.delete(runner_id)
         #session.commit() #this is implicitly called when the session goes out?

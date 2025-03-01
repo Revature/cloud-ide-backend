@@ -1,4 +1,6 @@
 # app/business/key_management.py
+"""Module for managing daily key pairs."""
+
 from datetime import date, datetime
 from sqlmodel import Session, select
 from app.db.database import engine
@@ -8,7 +10,8 @@ from app.business.encryption import encrypt_text, decrypt_text
 
 async def get_daily_key() -> Key:
     """
-    Checks if a key already exists for today's date.
+    Check if a key already exists for today's date.
+
     If it exists, returns the key record.
     If not, generates a new keypair via AWS, encrypts the private key material,
     saves the key record to the database, and returns it.
@@ -64,6 +67,7 @@ async def get_daily_key() -> Key:
 def get_key_by_id(key_id: int) -> Key:
     """
     Retrieve the Key record from the database given its key_id.
+
     Raises an exception if the key is not found.
     """
     with Session(engine) as session:

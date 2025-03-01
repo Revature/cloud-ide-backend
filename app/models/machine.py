@@ -1,3 +1,5 @@
+"""Machine model."""
+
 from __future__ import annotations
 from typing import List, Optional
 from datetime import datetime
@@ -12,6 +14,8 @@ from app.db import database
 # runners: Mapped[List["Runner"]] = Relationship(back_populates="machine")
 
 class Machine(TimestampMixin, SQLModel, table=True):
+    """Machine model."""
+
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     identifier: str
@@ -23,6 +27,8 @@ class Machine(TimestampMixin, SQLModel, table=True):
 
 
 class MachineUpdate(TimestampMixin, SQLModel):
+    """Machine update model."""
+
     id: int
     name: str | None = None
     identifier: str | None = None
@@ -31,12 +37,14 @@ class MachineUpdate(TimestampMixin, SQLModel):
     storage_size: int | None = None
 
 def create_machine(machine: Machine):
+    """Create a machine record in the database."""
     with next(database.get_session()) as session:
         session.add(machine)
         session.refresh()
     return machine
 
 def update_machine(machine: MachineUpdate):
+    """Update a machine record in the database."""
     with next(database.get_session()) as session:
         machine_from_db = session.get(Machine, machine.id)
         machine_data = machine.model_dump(exclude_unset=True)
@@ -48,10 +56,12 @@ def update_machine(machine: MachineUpdate):
 
 
 def get_machine(machine_id: int):
+    """Get a machine record from the database."""
     with next(database.get_session()) as session:
         return session.get(Machine, machine_id)
 
 def delete_machine(machine_id: int):
+    """Delete a machine record from the database."""
     with next(database.get_session()) as session:
         session.delete(machine_id)
         #session.commit() #this is implicitly called when the session goes out?

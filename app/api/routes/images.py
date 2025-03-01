@@ -1,3 +1,5 @@
+"""Images API routes."""
+
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlmodel import Session, select
@@ -8,9 +10,7 @@ router = APIRouter()
 
 @router.post("/", response_model=Image, status_code=status.HTTP_201_CREATED)
 def create_image(image: Image, session: Session = Depends(get_session)):
-    """
-    Create a new Image record.
-    """
+    """Create a new Image record."""
     session.add(image)
     session.commit()
     session.refresh(image)
@@ -18,9 +18,7 @@ def create_image(image: Image, session: Session = Depends(get_session)):
 
 @router.get("/", response_model=List[Image])
 def read_images(session: Session = Depends(get_session)):
-    """
-    Retrieve a list of all Images.
-    """
+    """Retrieve a list of all Images."""
     images = session.exec(select(Image)).all()
     return images
 
@@ -29,9 +27,7 @@ async def authentication_test(
     request: Request,
     session: Session = Depends(get_session)
 ):
-    """
-    Print all details from the incoming request.
-    """
+    """Print all details from the incoming request."""
     # Print headers and query parameters
     print("Headers:", request.headers)
     print("Query Parameters:", request.query_params)
@@ -48,9 +44,7 @@ async def authentication_test(
 
 @router.get("/{image_id}", response_model=Image)
 def read_image(image_id: int, session: Session = Depends(get_session)):
-    """
-    Retrieve a single Image by ID.
-    """
+    """Retrieve a single Image by ID."""
     image = session.get(Image, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -58,9 +52,7 @@ def read_image(image_id: int, session: Session = Depends(get_session)):
 
 @router.put("/{image_id}", response_model=Image)
 def update_image(image_id: int, updated_image: Image, session: Session = Depends(get_session)):
-    """
-    Update an existing Image record.
-    """
+    """Update an existing Image record."""
     image = session.get(Image, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")
@@ -79,9 +71,7 @@ def update_image(image_id: int, updated_image: Image, session: Session = Depends
 
 @router.delete("/{image_id}", status_code=status.HTTP_200_OK)
 def delete_image(image_id: int, session: Session = Depends(get_session)):
-    """
-    Delete an Image record.
-    """
+    """Delete an Image record."""
     image = session.get(Image, image_id)
     if not image:
         raise HTTPException(status_code=404, detail="Image not found")

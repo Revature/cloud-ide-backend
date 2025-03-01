@@ -1,3 +1,5 @@
+"""Runners API routes."""
+
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
@@ -11,17 +13,13 @@ router = APIRouter()
 
 @router.get("/", response_model=List[Runner])
 def read_runners(session: Session = Depends(get_session)):
-    """
-    Retrieve a list of all Runners.
-    """
+    """Retrieve a list of all Runners."""
     runners = session.exec(select(Runner)).all()
     return runners
 
 @router.get("/{runner_id}", response_model=Runner)
 def read_runner(runner_id: int, session: Session = Depends(get_session)):
-    """
-    Retrieve a single Runner by ID.
-    """
+    """Retrieve a single Runner by ID."""
     runner = session.get(Runner, runner_id)
     if not runner:
         raise HTTPException(status_code=404, detail="Runner not found")
@@ -31,7 +29,8 @@ def read_runner(runner_id: int, session: Session = Depends(get_session)):
 def extend_runner_session(
     extend_req: ExtendSessionRequest,
     session: Session = Depends(get_session)
-):
+    ):
+    """Update a runner's session_end by adding extra time."""
     runner = session.get(Runner, extend_req.runner_id)
     if not runner:
         raise HTTPException(

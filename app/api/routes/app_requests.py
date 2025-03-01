@@ -1,3 +1,5 @@
+"""Application request handling API routes."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from pydantic import BaseModel
@@ -15,6 +17,8 @@ import asyncio
 router = APIRouter()
 
 class RunnerRequest(BaseModel):
+    """Request model for the get_ready_runner endpoint."""
+
     image_id: int
     env_data: Dict[str, Any]
     user_email: str

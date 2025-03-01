@@ -1,3 +1,5 @@
+"""Key model."""
+
 from __future__ import annotations
 from datetime import date, datetime
 from typing import Optional
@@ -6,6 +8,8 @@ from sqlalchemy import UniqueConstraint
 from app.models.mixins import TimestampMixin
 
 class Key(TimestampMixin, SQLModel, table=True):
+    """Key model."""
+
     __tablename__ = "key"
     __table_args__ = (UniqueConstraint("key_date"),)
 

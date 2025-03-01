@@ -1,3 +1,4 @@
+"""Module to set up the Celery app and the Celery beat scheduler."""
 import os
 from celery import Celery
 import app.tasks.starting_runner

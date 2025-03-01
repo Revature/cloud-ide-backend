@@ -1,3 +1,4 @@
+"""Script model."""
 from __future__ import annotations
 from typing import Optional
 from sqlmodel import SQLModel, Field, Column, TEXT
@@ -9,6 +10,8 @@ from app.db import database
 # image: Mapped["Image"] = Relationship(back_populates="scripts")
 
 class Script(TimestampMixin, SQLModel, table=True):
+    """Script model."""
+
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     description: str
@@ -25,6 +28,8 @@ class Script(TimestampMixin, SQLModel, table=True):
 # 4. on_disconnect
 
 class ScriptUpdate(TimestampMixin, SQLModel):
+    """Script update model."""
+
     id: int
     name: str | None = None
     description: str | None = None
@@ -33,12 +38,14 @@ class ScriptUpdate(TimestampMixin, SQLModel):
 
 
 def create_script(script: Script):
+    """Create a script record in the database."""
     with next(database.get_session()) as session:
         session.add(script)
         session.refresh()
     return script
 
 def update_script(script: ScriptUpdate):
+    """Update a script record in the database."""
     with next(database.get_session()) as session:
         script_from_db = session.get(Script, script.id)
         script_data = script.model_dump(exclude_unset=True)
@@ -50,10 +57,12 @@ def update_script(script: ScriptUpdate):
 
 
 def get_script(script_id: int):
+    """Retrieve a script record from the database."""
     with next(database.get_session()) as session:
         return session.get(Script, script_id)
 
 def delete_script(script_id: int):
+    """Delete a script record from the database."""
     with next(database.get_session()) as session:
         session.delete(script_id)
         session.commit()

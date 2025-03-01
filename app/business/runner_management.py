@@ -1,4 +1,6 @@
 # business/runner_management.py
+"""Module for managing runners (EC2 instances) for running scripts."""
+
 import uuid
 import asyncio
 from datetime import datetime, timedelta
@@ -11,8 +13,8 @@ from app.business.key_management import get_daily_key
 
 async def launch_runners(image_identifier: str, runner_count: int):
     """
-    Launches EC2 instances concurrently and creates Runner records after
-    waiting for all instances to be running.
+    Launch EC2 instances concurrently and create Runner records after waiting for all instances to be running.
+
     Each new runner is associated with today's key.
     Returns a list of launched instance IDs.
     """
@@ -80,7 +82,9 @@ async def launch_runners(image_identifier: str, runner_count: int):
     return launched_instance_ids
 
 async def shutdown_runners(launched_instance_ids: list):
-    """Stop and then terminate all EC2 instances given in launched_instance_ids.
+    """
+    Stop and then terminate all EC2 instances given in launched_instance_ids.
+
     Update the corresponding Runner record to "closed" after stopping and to
     "terminated" after termination.
     """
@@ -117,7 +121,9 @@ async def shutdown_runners(launched_instance_ids: list):
                 print(f"Runner with instance identifier {instance_id} not found (terminate update).")
 
 async def shutdown_all_runners():
-    """Stop and then terminate all EC2 instances for runners that are not in the 'terminated' state.
+    """
+    Stop and then terminate all EC2 instances for runners that are not in the 'terminated' state.
+
     Uses the shutdown_runners function.
     """
     with Session(engine) as session:

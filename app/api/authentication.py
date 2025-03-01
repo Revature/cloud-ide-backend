@@ -1,4 +1,6 @@
 # app/api/authentication.py
+"""Authentication module for the API routes."""
+
 # https://workos.com/docs/reference/sso/profile/get-user-profile
 import os
 from dotenv import load_dotenv
@@ -19,6 +21,7 @@ workos_client = WorkOSClient(
 )
 
 def verify_workos_token(credentials: HTTPAuthorizationCredentials = Depends(oauth2_scheme)):
+    """Verify the WorkOS token and return the user's profile."""
     token = credentials.credentials
     try:
         # Use the WorkOS client to get the user's profile

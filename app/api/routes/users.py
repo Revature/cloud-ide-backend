@@ -1,3 +1,5 @@
+"""Users API routes."""
+
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
@@ -14,6 +16,7 @@ router = APIRouter()
 
 @router.get("/", response_model=List[User])
 def read_users(session: Session = Depends(get_session)):
+    """Retrieve all users."""
     token_payload: dict = Depends(verify_workos_token)
     # print the payload
     print(token_payload)
@@ -22,6 +25,7 @@ def read_users(session: Session = Depends(get_session)):
 
 @router.get("/{user_id}", response_model=User)
 def read_user(user_id: int, session: Session = Depends(get_session)):
+    """Retrieve a single user by ID."""
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(
@@ -32,6 +36,7 @@ def read_user(user_id: int, session: Session = Depends(get_session)):
 
 @router.post("/", response_model=User)
 def create_user(user_create: UserCreate, session: Session = Depends(get_session)):
+    """Create a new user, reutrn the new user."""
     # Create a new User instance from the UserCreate data.
     user = User(**user_create.model_dump(), created_by="system", modified_by="system")
     session.add(user)
@@ -60,6 +65,7 @@ def create_user(user_create: UserCreate, session: Session = Depends(get_session)
 
 @router.patch("/{user_id}", response_model=User)
 def update_user(user_id: int, user: User, session: Session = Depends(get_session)):
+    """Update an existing user, return the updated user."""
     db_user = session.get(User, user_id)
     if not db_user:
         raise HTTPException(
@@ -76,6 +82,7 @@ def update_user(user_id: int, user: User, session: Session = Depends(get_session
 
 @router.delete("/{user_id}", response_model=User)
 def delete_user(user_id: int, session: Session = Depends(get_session)):
+    """Delete a user, return the deleted user."""
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(

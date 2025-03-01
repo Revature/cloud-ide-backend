@@ -1,3 +1,5 @@
+"""Machine (vm) API routes."""
+
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
@@ -8,9 +10,7 @@ router = APIRouter()
 
 @router.post("/", response_model=Machine, status_code=status.HTTP_201_CREATED)
 def create_machine(machine: Machine, session: Session = Depends(get_session)):
-    """
-    Create a new Machine record.
-    """
+    """Create a new Machine record."""
     session.add(machine)
     session.commit()
     session.refresh(machine)
@@ -18,17 +18,13 @@ def create_machine(machine: Machine, session: Session = Depends(get_session)):
 
 @router.get("/", response_model=List[Machine])
 def read_machines(session: Session = Depends(get_session)):
-    """
-    Retrieve a list of all Machines.
-    """
+    """Retrieve a list of all Machines."""
     machines = session.exec(select(Machine)).all()
     return machines
 
 @router.get("/{machine_id}", response_model=Machine)
 def read_machine(machine_id: int, session: Session = Depends(get_session)):
-    """
-    Retrieve a single Machine by ID.
-    """
+    """Retrieve a single Machine by ID."""
     machine = session.get(Machine, machine_id)
     if not machine:
         raise HTTPException(status_code=404, detail="Machine not found")
@@ -36,9 +32,7 @@ def read_machine(machine_id: int, session: Session = Depends(get_session)):
 
 @router.patch("/{machine_id}", response_model=Machine)
 def update_machine(machine_id: int, updated_machine: Machine, session: Session = Depends(get_session)):
-    """
-    Update an existing Machine record.
-    """
+    """Update an existing Machine record."""
     machine = session.get(Machine, machine_id)
     if not machine:
         raise HTTPException(status_code=404, detail="Machine not found")
@@ -56,9 +50,7 @@ def update_machine(machine_id: int, updated_machine: Machine, session: Session =
 
 @router.delete("/{machine_id}", status_code=status.HTTP_200_OK)
 def delete_machine(machine_id: int, session: Session = Depends(get_session)):
-    """
-    Delete a Machine record.
-    """
+    """Delete a Machine record."""
     machine = session.get(Machine, machine_id)
     if not machine:
         raise HTTPException(status_code=404, detail="Machine not found")

@@ -1,4 +1,6 @@
 # app/business/script_management.py
+"""Module for managing scripts and running them on runners via SSH."""
+
 from sqlmodel import Session, select
 from app.db.database import engine
 from app.models.runner import Runner
@@ -10,6 +12,7 @@ import asyncio
 def render_script(template: str, context: dict) -> str:
     """
     Render the script template using the provided context.
+
     Uses Jinja2 for templating.
     """
     jinja_template = jinja2.Template(template)
@@ -17,7 +20,8 @@ def render_script(template: str, context: dict) -> str:
 
 def get_runner_key(runner_key_id: int) -> str:
     """
-    Retrieves and decrypts the private key for the given runner's key record.
+    Retrieve and decrypt the private key for the given runner's key record.
+
     Assumes there is a function get_key_by_id in key_management and a decrypt_text function.
     """
     from app.business.key_management import get_key_by_id  # Local import to avoid circular imports
@@ -31,10 +35,11 @@ def get_runner_key(runner_key_id: int) -> str:
 
 async def run_script_for_runner(event: str, runner_id: int) -> dict[str, str]:
     """
+    Run scripts on runner based on event hook.
+
     Retrieve the script for the given event and runner's image,
     render it using the runner's env_data as context,
     and use SSH to run the script on the runner.
-
     Returns a dictionary with the output and error.
     """
     # Create a new session for lookup.

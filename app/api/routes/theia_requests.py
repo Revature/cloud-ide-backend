@@ -1,3 +1,5 @@
+"""Theia request API routes."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from pydantic import BaseModel
@@ -11,6 +13,8 @@ from app.business.script_management import run_script_for_runner  # Script manag
 router = APIRouter()
 
 class RunnerStateUpdate(BaseModel):
+    """Request model for the update_state endpoint."""
+
     url: str
     state: str  # e.g., "app_starting", "awaiting_client", "active", "disconnecting"
     token: Optional[str] = None
@@ -22,6 +26,7 @@ async def update_runner_state_endpoint(
 ):
     """
     Endpoint for Theia to report state changes.
+
     The request should include:
       - url: The URL of the runner (from AWS)
       - state: The new state

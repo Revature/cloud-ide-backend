@@ -1,4 +1,6 @@
 # app/business/resource_setup.py
+"""Module for setting up default resources in the database."""
+
 from dataclasses import dataclass
 from sqlmodel import Session, select
 from app.db.database import engine
@@ -7,14 +9,18 @@ from datetime import datetime
 
 @dataclass
 class Resources:
+    """Dataclass for storing default resources."""
+
     system_user_email: str
     machine_id: int
     image_identifier: str
     runner_pool_size: int
 
 def setup_resources():
-    """Fetch or create default User, Machine, Image, and Script.
-       Returns a Resources dataclass with the necessary values.
+    """
+    Fetch or create default User, Machine, Image, and Script.
+
+    Returns a Resources dataclass with the necessary values.
     """
     with Session(engine) as session:
         # 1) Fetch or create a default user.

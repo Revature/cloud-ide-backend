@@ -1,3 +1,5 @@
+"""Role model for the application."""
+
 from __future__ import annotations
 from typing import List, Optional
 from datetime import datetime
@@ -12,6 +14,8 @@ from app.db.database import get_session
 #     REPORTER = "reporter"
 
 class Role(TimestampMixin, SQLModel, table=True):
+    """Role model for the application."""
+
     id: int | None = Field(default=None, primary_key=True)
     name: str
     modified_by: None | str = Field(default="")
@@ -19,6 +23,7 @@ class Role(TimestampMixin, SQLModel, table=True):
 
 
 def populate_roles():
+    """Populate the roles table with default roles."""
     # Use the get_session generator to obtain a session.
     session = next(get_session())
     try:

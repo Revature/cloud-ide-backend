@@ -1,3 +1,5 @@
+"""Runner pool management task."""
+
 from datetime import datetime
 from sqlmodel import Session, select
 from app.celery_app import celery_app
@@ -14,6 +16,7 @@ logger = get_task_logger(__name__)
 def manage_runner_pool():
     """
     Task that manages the runner pool for each image.
+
     Ensures the number of "ready" runners matches the configured runner_pool_size for each image.
     """
     logger.info("Starting runner pool management task.")
