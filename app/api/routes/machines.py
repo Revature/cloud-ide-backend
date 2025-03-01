@@ -53,7 +53,5 @@ def delete_machine(machine_id: int, session: Session = Depends(get_session)):
     machine = session.get(Machine, machine_id)
     if not machine:
         raise HTTPException(status_code=404, detail="Machine not found")
-
     session.delete(machine)
     session.commit()
-    return None

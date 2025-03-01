@@ -22,10 +22,7 @@ def read_images(session: Session = Depends(get_session)):
     return images
 
 @router.post("/authentication_test", status_code=status.HTTP_201_CREATED)
-async def authentication_test(
-    request: Request,
-    session: Session = Depends(get_session)
-):
+async def authentication_test(request: Request, session: Session = Depends(get_session)):
     """Print all details from the incoming request."""
     # Print headers and query parameters
     print("Headers:", request.headers)
@@ -76,4 +73,3 @@ def delete_image(image_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Image not found")
     session.delete(image)
     session.commit()
-    return None

@@ -37,6 +37,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     and the URL is returned. Also, the appropriate script is executed for the
     "on_awaiting_client" event.
     """
+    max_session_minutes = 180
     # Retrieve the image record.
     stmt_image = select(Image).where(Image.id == request.image_id)
     db_image = session.exec(stmt_image).first()
@@ -57,8 +58,9 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     )
     existing_runner = session.exec(stmt_runner).first()
 
+
     if existing_runner:
-        if request.session_time > 180:
+        if request.session_time > max_session_minutes:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Session time cannot exceed 3 hours.")
         # Update session_end for the existing runner.
         existing_runner.session_end = existing_runner.session_start + timedelta(minutes=request.session_time)
@@ -99,7 +101,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     runner.env_data = {"env": request.env_data}
     runner.state = "awaiting_client"
 
-    if request.session_time > 180:
+    if request.session_time > max_session_minutes:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Session time cannot exceed 3 hours.")
 
     runner.session_start = datetime.utcnow()

@@ -15,13 +15,14 @@ def encrypt_text(text: str) -> str:
     The IV is set to be the same as the key (truncated to 16 bytes).
     Returns a URL-safe Base64 encoded string of IV + ciphertext.
     """
+    min_encrypton_length = 16
     print("Encrypting text")
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
         raise ValueError("ENCRYPTION_KEY environment variable is not set.")
 
     key_bytes = key.encode("utf-8")
-    if len(key_bytes) < 16:
+    if len(key_bytes) < min_encrypton_length:
         raise ValueError("ENCRYPTION_KEY must be at least 16 bytes long.")
     key_bytes = key_bytes[:16]
 
@@ -50,13 +51,14 @@ def decrypt_text(encrypted_text: str) -> str:
     Expects that the first 16 bytes of the decoded data are the IV.
     Returns the original plaintext.
     """
+    min_encryption_length = 16
     print("Decrypting text")
     key = os.getenv("ENCRYPTION_KEY")
     if not key:
         raise ValueError("ENCRYPTION_KEY environment variable is not set.")
 
     key_bytes = key.encode("utf-8")
-    if len(key_bytes) < 16:
+    if len(key_bytes) < min_encryption_length:
         raise ValueError("ENCRYPTION_KEY must be at least 16 bytes long.")
     key_bytes = key_bytes[:16]
 
