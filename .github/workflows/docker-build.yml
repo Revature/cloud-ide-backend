@@ -25,4 +25,4 @@ jobs:
 
             - name: Should run...
               if: contains( ${{ github.ref_name }}, "feat-")
-              run: echo "Running from feat-
+              run: echo "Running from feat-"
