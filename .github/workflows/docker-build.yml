@@ -14,5 +14,7 @@ jobs:
               run: docker build . --file Dockerfile --tag cde-monolith:latest --tag cde-monolith:${{ github.sha }}
 
             - name: Test branch trigger
-              if: github.ref == 'refs/heads/feat-*'
-              run: echo "test step running"
+
+              run: |
+                echo "Run branch specific step: "
+                echo "${{ github.refs }}"
