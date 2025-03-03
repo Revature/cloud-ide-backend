@@ -19,7 +19,7 @@ def create_db_and_tables():
     from app.models import user, machine, image, runner, role, user_role, script, runner_history, key
 
     # Create any tables that don't exist.
-    SQLModel.metadata.drop_all(engine)
+    #SQLModel.metadata.drop_all(engine)
     SQLModel.metadata.create_all(engine)
 
     # Populate roles only if they don't already exist.
