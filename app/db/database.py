@@ -26,7 +26,7 @@ def create_db_and_tables():
     with Session(engine) as session:
         existing_role = session.exec(select(role.Role)).first()
         if not existing_role:
-            role.populate_roles(session)  # Assuming populate_roles accepts a session.
+            role.populate_roles()
 
 def get_session():
     """Context manager to provide a session for a block of code."""
