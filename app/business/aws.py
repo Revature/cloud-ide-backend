@@ -5,6 +5,7 @@ import datetime
 from io import StringIO
 import boto3
 import paramiko
+import os
 
 ###################
 # Keypair Functionality
@@ -106,7 +107,7 @@ async def Create_New_EC2(
                 {
                     'ResourceType': 'instance',
                     'Tags': [
-                        { 'Key': 'Name', 'Value': 'Ashoka-Testing'},
+                        { 'Key': 'Name', 'Value': os.getenv("RUNNER_TAG", "Ashoka-Testing") },
                     ]
                 }
             ]
