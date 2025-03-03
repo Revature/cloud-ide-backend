@@ -129,7 +129,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
         print(f"Script executed for runner {runner.id}: {script_result}")
 
         # Generate a JWT token for the runner
-        jwt_token = create_jwt_token(str(runner.id))
+        jwt_token = create_jwt_token(str(runner.url))
 
         # Get the workspace path from env_data. For example, if env_data["path"] is "/#/home/ubuntu/helloworld"
         workspace_path = runner.env_data.get("path", "")
@@ -139,7 +139,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
 
         # Construct the full URL with your domain, token, and workspace path.
         # Example: http://devide.revature.com/<jwt_token>/<workspace_path>
-        full_url = f"http://devide.revature.com/{jwt_token}{workspace_path}"
+        full_url = f"http://devide.revature.com/dest/{jwt_token}{workspace_path}"
 
         return {"url": full_url, "runner_id": str(runner.id)}
     
