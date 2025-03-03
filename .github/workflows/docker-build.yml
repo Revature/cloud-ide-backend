@@ -17,4 +17,4 @@ jobs:
 
               run: |
                 echo "Run branch specific step: "
-                echo "${{ github.refs }}"
+                echo "${{ github.ref_name }}"
