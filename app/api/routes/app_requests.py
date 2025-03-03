@@ -127,11 +127,12 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     try:
         script_result = await run_script_for_runner("on_awaiting_client", runner.id)
         print(f"Script executed for runner {runner.id}: {script_result}")
-        
+
         # Construct the full URL by appending the workspace path stored in env_data["path"]
-        full_url = f"http://{runner.url}:3000{runner.env_data.get('path', '')}"        
+        full_url = f"http://{runner.url}:3000{runner.env_data.get('path', '')}"
         return {"url": full_url, "runner_id": str(runner.id)}
 
     except Exception as e:
         print(f"Error executing script for runner {runner.id}: {e}")
         return {"error": f"Error executing script for runner {runner.id}"}
+    
