@@ -709,8 +709,11 @@ lint.select = [
 
 lint.ignore = [
   "B005",
+  "B006",
   "B008",
-  "PLR0915"
+  "PLR0912",
+  "PLR0915",
+  "RUF006"
 ]
 
 lint.pydocstyle.convention = "pep257"
