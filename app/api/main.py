@@ -1,3 +1,5 @@
+"""Main application file for the API."""
+
 from fastapi import APIRouter
 from app.api.routes import users, runners, machines, images, app_requests # import your new images route
 

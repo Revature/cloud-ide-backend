@@ -1,3 +1,5 @@
+"""Runner pool management task."""
+
 from datetime import datetime
 from sqlmodel import Session, select
 from app.celery_app import celery_app
@@ -13,7 +15,8 @@ logger = get_task_logger(__name__)
 @celery_app.task
 def manage_runner_pool():
     """
-    Task that manages the runner pool for each image. 
+    Task that manages the runner pool for each image.
+
     Ensures the number of "ready" runners matches the configured runner_pool_size for each image.
     """
     logger.info("Starting runner pool management task.")
@@ -36,21 +39,21 @@ def manage_runner_pool():
                 runners_to_create = image.runner_pool_size - ready_runners_count
                 logger.info(f"Launching {runners_to_create} new runners for image {image.id}.")
                 asyncio.run(launch_runners(image.identifier, runners_to_create))
-            
+
             elif ready_runners_count > image.runner_pool_size:
                 from app.business.runner_management import shutdown_runners
                 # If there are excess ready runners, terminate the extra ones
                 runners_to_terminate = ready_runners_count - image.runner_pool_size
                 logger.info(f"Terminating {runners_to_terminate} extra runners for image {image.id}.")
-                
+
                 # Get excess ready runners
-                stmt_excess_runners = select(Runner).where(Runner.state == "ready", Runner.image_id == image.id)
-                excess_runners = session.exec(stmt_excess_runners).limit(runners_to_terminate).all()
+                stmt_excess_runners = select(Runner).where(Runner.state == "ready", Runner.image_id == image.id).limit(runners_to_terminate)
+                excess_runners = session.exec(stmt_excess_runners).all()
 
                 # Terminate the extra runners
                 instance_ids_to_terminate = [runner.identifier for runner in excess_runners]
                 asyncio.run(shutdown_runners(instance_ids_to_terminate))
-        
+
         session.commit()
 
     logger.info("Runner pool management task completed.")

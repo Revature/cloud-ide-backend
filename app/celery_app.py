@@ -1,3 +1,4 @@
+"""Module to set up the Celery app and the Celery beat scheduler."""
 import os
 from celery import Celery
 
@@ -11,9 +12,16 @@ celery_app = Celery(
 
 celery_app.conf.timezone = "UTC"
 
-import app.tasks.starting_runner
-import app.tasks.cleanup_runners
-import app.tasks.runner_pool_management
+# Autodiscover tasks from the 'app.tasks' package
+celery_app.autodiscover_tasks(["app.tasks"])
+
+try:
+    # Imports here because of circular imports
+    import app.tasks.starting_runner
+    import app.tasks.cleanup_runners
+    import app.tasks.runner_pool_management
+except ImportError as e:
+    print("Error importing tasks:", e)
 
 # Set up the beat schedule
 celery_app.conf.beat_schedule = {

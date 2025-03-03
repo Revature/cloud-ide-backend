@@ -1,27 +1,24 @@
-from typing import List
+"""Runners API routes."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from datetime import timedelta
 from app.db.database import get_session
 from app.models.runner import Runner
 from app.models.runner_history import RunnerHistory
-from app.schemas.runner import ExtendSessionRequest 
+from app.schemas.runner import ExtendSessionRequest
 
 router = APIRouter()
 
-@router.get("/", response_model=List[Runner]) 
+@router.get("/", response_model=list[Runner])
 def read_runners(session: Session = Depends(get_session)):
-    """
-    Retrieve a list of all Runners.
-    """
+    """Retrieve a list of all Runners."""
     runners = session.exec(select(Runner)).all()
     return runners
 
 @router.get("/{runner_id}", response_model=Runner)
 def read_runner(runner_id: int, session: Session = Depends(get_session)):
-    """
-    Retrieve a single Runner by ID.
-    """
+    """Retrieve a single Runner by ID."""
     runner = session.get(Runner, runner_id)
     if not runner:
         raise HTTPException(status_code=404, detail="Runner not found")
@@ -31,18 +28,19 @@ def read_runner(runner_id: int, session: Session = Depends(get_session)):
 def extend_runner_session(
     extend_req: ExtendSessionRequest,
     session: Session = Depends(get_session)
-):
+    ):
+    """Update a runner's session_end by adding extra time."""
     runner = session.get(Runner, extend_req.runner_id)
     if not runner:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Runner not found"
         )
-    
+
     # Calculate the new session_end by adding extra_time.
     extension = timedelta(minutes=extend_req.extra_time)
     new_session_end = runner.session_end + extension
-    
+
     # Check that total session duration does not exceed 3 hours.
     total_duration = new_session_end - runner.session_start
     if total_duration > timedelta(hours=3):
@@ -50,14 +48,14 @@ def extend_runner_session(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Extension would exceed maximum allowed session time of 3 hours."
         )
-    
+
     # Save the old session_end for history logging.
     old_session_end = runner.session_end
-    
+
     # Update the runner's session_end.
     runner.session_end = new_session_end
     session.add(runner)
-    
+
     # Create a new runner_history record logging this extension event.
     event_data = {
         "extra_time": extend_req.extra_time,
@@ -72,7 +70,7 @@ def extend_runner_session(
         modified_by="system"
     )
     session.add(new_history)
-    
+
     session.commit()
     session.refresh(runner)
     return "Session extended successfully"

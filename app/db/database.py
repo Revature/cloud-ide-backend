@@ -1,3 +1,5 @@
+"""Module to handle database connection and session management."""
+
 import os
 from sqlmodel import SQLModel, create_engine, Session, select
 from dotenv import load_dotenv
@@ -12,19 +14,21 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(DATABASE_URL, echo=True)
 
 def create_db_and_tables():
+    """Create the database and tables if they don't already exist."""
     # Import all models so that they are registered with SQLModel metadata.
     from app.models import user, machine, image, runner, role, user_role, script, runner_history, key
 
     # Create any tables that don't exist.
     SQLModel.metadata.create_all(engine)
-    
+
     # Populate roles only if they don't already exist.
     with Session(engine) as session:
         existing_role = session.exec(select(role.Role)).first()
         if not existing_role:
             role.populate_roles(session)  # Assuming populate_roles accepts a session.
-    
+
 def get_session():
+    """Context manager to provide a session for a block of code."""
     # Use the globally created engine.
     with Session(engine) as session:
         yield session
