@@ -36,6 +36,6 @@ jobs:
               env:
                 ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
               run: |
-                docker push $ECR_Registry/revapod/cde-monolith:latest
-                docker push $ECR_Registry/revapod/cde-monolith:${{ github.sha }}
+                docker push $ECR_REGISTRY/revapod/cde-monolith:latest
+                docker push $ECR_REGISTRY/revapod/cde-monolith:${{ github.sha }}
                 echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" >> $GITHUB_OUTPUT
