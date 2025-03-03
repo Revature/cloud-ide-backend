@@ -12,6 +12,7 @@ from app.models.image import Image
 from app.business.encryption import encrypt_text
 from app.business.runner_management import launch_runners
 from app.business.script_management import run_script_for_runner  # Script management layer
+from app.business.jwt_creation import create_jwt_token
 import asyncio
 
 router = APIRouter()
@@ -57,7 +58,6 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
         Runner.user_id == user_obj.id
     )
     existing_runner = session.exec(stmt_runner).first()
-
 
     if existing_runner:
         if request.session_time > max_session_minutes:
@@ -128,9 +128,24 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
         script_result = await run_script_for_runner("on_awaiting_client", runner.id)
         print(f"Script executed for runner {runner.id}: {script_result}")
 
-        # Construct the full URL by appending the workspace path stored in env_data["path"]
-        full_url = f"http://{runner.url}:3000{runner.env_data.get('path', '')}"
+        # Generate a JWT token for the runner
+        jwt_token = create_jwt_token(str(runner.id))
+
+        # Get the workspace path from env_data. For example, if env_data["path"] is "/#/home/ubuntu/helloworld"
+        workspace_path = runner.env_data.get("path", "")
+        # Ensure the workspace path starts with a slash
+        if not workspace_path.startswith("/"):
+            workspace_path = "/" + workspace_path
+
+        # Construct the full URL with your domain, token, and workspace path.
+        # Example: http://devide.revature.com/<jwt_token>/<workspace_path>
+        full_url = f"http://devide.revature.com/{jwt_token}{workspace_path}"
+
         return {"url": full_url, "runner_id": str(runner.id)}
+    
+        # Construct the full URL by appending the workspace path stored in env_data["path"]
+        # full_url = f"http://{runner.url}:3000{runner.env_data.get('path', '')}"
+        # return {"url": full_url, "runner_id": str(runner.id)}
 
     except Exception as e:
         print(f"Error executing script for runner {runner.id}: {e}")
