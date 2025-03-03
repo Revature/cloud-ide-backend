@@ -15,7 +15,7 @@ jobs:
               uses: actions/checkout@v2
 
             - name: Build Docker Image
-              run: docker build --file Dockerfile --tag $ECR_REPOSITORY:latest --tag $ECR_REPOSITORY:${{ github.sha }} .
+              run: docker build --file Dockerfile --tag $ECR_REPOSITORY:${{ github.sha }} .
               
             - name: Configure AWS credentials
               if: startsWith( github.ref_name, 'f')
@@ -36,6 +36,8 @@ jobs:
               env:
                 ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
               run: |
+                docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/revapod/cde-monolith:latest
+                docker tag $ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/revapod/cde-monolith:${{ github.sha }}
                 docker push $ECR_REGISTRY/revapod/cde-monolith:latest
                 docker push $ECR_REGISTRY/revapod/cde-monolith:${{ github.sha }}
                 echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" >> $GITHUB_OUTPUT
