@@ -18,3 +18,11 @@ jobs:
               run: |
                 echo "Run branch specific step: "
                 echo "${{ github.ref_name }}"
+
+            - name: Should fail...
+              if: contains( ${{ github.ref_name }}, "dev")
+              run: echo "Running from Dev"
+
+            - name: Should run...
+              if: contains( ${{ github.ref_name }}, "feat-")
+              run: echo "Running from feat-
