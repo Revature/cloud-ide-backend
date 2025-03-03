@@ -63,7 +63,7 @@ def setup_resources():
                 name="sample-id-image",
                 description="An AMI for testing",
                 identifier="ami-0bbfffa970b0280da",
-                runner_pool_size=3,  # Example pool size
+                runner_pool_size=1,  # Example pool size
                 machine_id=db_machine.id,
                 created_by="system",
                 modified_by="system"
@@ -83,12 +83,19 @@ def setup_resources():
                 image_id=db_image.id,
                 script="""#!/bin/bash
 # Git clone script
+
 if [ -z "{{ repo_url }}" ]; then
     echo "Error: repository URL not provided."
     exit 1
 fi
-rm -rf /home/ubuntu/app_repo
-git clone "{{ repo_url }}" /home/ubuntu/app_repo
+
+if [ -z "{{ repo_name }}" ]; then
+    echo "Error: repository name not provided."
+    exit 1
+fi
+
+rm -rf /home/ubuntu/{{ repo_name }}
+git clone "{{ repo_url }}" /home/ubuntu/{{ repo_name }}
 if [ $? -eq 0 ]; then
     echo "Repository cloned successfully."
 else

@@ -36,7 +36,6 @@ class ScriptUpdate(TimestampMixin, SQLModel):
     event: str | None = None
     script: str | None = None
 
-
 def create_script(script: Script):
     """Create a script record in the database."""
     with next(database.get_session()) as session:

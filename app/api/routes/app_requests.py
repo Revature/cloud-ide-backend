@@ -98,11 +98,19 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
 
     # Update the runner: assign the user, update environment data, and change state to "awaiting_client".
     runner.user_id = user_obj.id
-    runner.env_data = {"env": request.env_data}
+    runner.env_data = request.env_data # setting the environment data
     runner.state = "awaiting_client"
 
+    # Use repo_name from the script_variables. If not present, default to "project".
+    repo_name = request.env_data.get("script_variables", {}).get("repo_name", "project")
+    # Instead of updating runner.url, add a new field "path" to env_data.
+    runner.env_data["path"] = "/#/home/ubuntu/" + repo_name
+
     if request.session_time > max_session_minutes:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Session time cannot exceed 3 hours.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Session time cannot exceed 3 hours."
+        )
 
     runner.session_start = datetime.utcnow()
     runner.session_end = runner.session_start + timedelta(minutes=request.session_time)
@@ -119,7 +127,11 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     try:
         script_result = await run_script_for_runner("on_awaiting_client", runner.id)
         print(f"Script executed for runner {runner.id}: {script_result}")
+        
+        # Construct the full URL by appending the workspace path stored in env_data["path"]
+        full_url = f"http://{runner.url}:3000{runner.env_data.get('path', '')}"        
+        return {"url": full_url, "runner_id": str(runner.id)}
+
     except Exception as e:
         print(f"Error executing script for runner {runner.id}: {e}")
-
-    return {"url": f"http://{runner.url}:3000", "runner_id": str(runner.id)}
+        return {"error": f"Error executing script for runner {runner.id}"}

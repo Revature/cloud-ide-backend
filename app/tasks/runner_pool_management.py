@@ -47,8 +47,8 @@ def manage_runner_pool():
                 logger.info(f"Terminating {runners_to_terminate} extra runners for image {image.id}.")
 
                 # Get excess ready runners
-                stmt_excess_runners = select(Runner).where(Runner.state == "ready", Runner.image_id == image.id)
-                excess_runners = session.exec(stmt_excess_runners).limit(runners_to_terminate).all()
+                stmt_excess_runners = select(Runner).where(Runner.state == "ready", Runner.image_id == image.id).limit(runners_to_terminate)
+                excess_runners = session.exec(stmt_excess_runners).all()
 
                 # Terminate the extra runners
                 instance_ids_to_terminate = [runner.identifier for runner in excess_runners]

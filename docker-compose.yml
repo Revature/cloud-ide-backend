@@ -8,7 +8,6 @@ services:
     env_file:
       - .env
     volumes:
-      # Mount your local ~/.aws into /root/.aws in the container, read-only
       - ~/.aws:/root/.aws:ro
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     depends_on:
@@ -39,3 +38,12 @@ services:
   redis:
     image: redis:alpine
     container_name: redis
+
+  nginx:
+    image: tedbalashov/tedpod:cloudidenginx
+    container_name: nginx
+    ports:
+      - "8020:8020"
+    env_file:
+      - .env
+    platform: linux/amd64

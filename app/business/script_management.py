@@ -56,7 +56,7 @@ async def run_script_for_runner(event: str, runner_id: int) -> dict[str, str]:
 
         # Render the script template using runner.env_data.
         # We assume runner.env_data is a dict that contains variables used in the script.
-        rendered_script = render_script(script_record.script, runner.env_data.get("env", {}))
+        rendered_script = render_script(script_record.script, runner.env_data.get("script_variables", {}))
 
     # Retrieve the private key using runner.key_id.
     private_key = get_runner_key(runner.key_id)
