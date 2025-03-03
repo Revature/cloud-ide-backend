@@ -135,4 +135,3 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     except Exception as e:
         print(f"Error executing script for runner {runner.id}: {e}")
         return {"error": f"Error executing script for runner {runner.id}"}
-    
