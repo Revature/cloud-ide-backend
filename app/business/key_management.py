@@ -7,6 +7,7 @@ from app.db.database import engine
 from app.models.key import Key
 from app.business.aws import Create_New_Keypair
 from app.business.encryption import encrypt_text, decrypt_text
+import os
 
 async def get_daily_key() -> Key:
     """
