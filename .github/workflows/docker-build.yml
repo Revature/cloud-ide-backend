@@ -20,9 +20,9 @@ jobs:
                 echo "${{ github.ref_name }}"
 
             - name: Should fail...
-              if: contains( ${{ github.ref_name }}, "dev")
+              if: startsWith( github.ref_name, 'd')
               run: echo "Running from Dev"
 
             - name: Should run...
-              if: contains( ${{ github.ref_name }}, "feat-")
+              if: startsWith( github.ref_name, 'f')
               run: echo "Running from feat-"
