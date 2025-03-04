@@ -168,74 +168,81 @@ exit 0""",
                 event="on_terminate",
                 image_id=db_image.id,
                 script=r"""#!/bin/bash
-# Script to set up GitHub credentials and clone the repository
+# Script to commit and push changes on runner termination
 
 set -e  # Exit on error
-echo "Setting up environment and cloning repository..."
+echo "Starting GitHub save operations..."
 
 # Extract variables from script vars (directly in context)
-REPO_URL="{{ git_url }}"
 REPO_NAME="{{ git_repo_name }}"
+REPO_URL="{{ git_url }}"
+REPO_PATH="/home/ubuntu/$REPO_NAME"
 
-# Extract variables from env_vars (in env_vars namespace)
-GIT_TOKEN="{{ env_vars.git_token | default('') }}"
-GIT_USERNAME="{{ env_vars.git_username | default('') }}"
-
-# Set up GitHub credentials as environment variables for later use
-if [ -n "$GIT_TOKEN" ] && [ -n "$GIT_USERNAME" ]; then
-    # Store credentials in the user's environment
-    echo "export GITHUB_TOKEN=$GIT_TOKEN" >> /home/ubuntu/.bashrc
-    echo "export GITHUB_USERNAME=$GIT_USERNAME" >> /home/ubuntu/.bashrc
-
-    # Create a local environment file that can be sourced later
-    echo "GITHUB_TOKEN=$GIT_TOKEN" > /home/ubuntu/.github_env
-    echo "GITHUB_USERNAME=$GIT_USERNAME" >> /home/ubuntu/.github_env
-    chmod 600 /home/ubuntu/.github_env
-    chown ubuntu:ubuntu /home/ubuntu/.github_env
-
-    # Set git configuration
-    sudo -u ubuntu git config --global user.name "$GIT_USERNAME"
-    sudo -u ubuntu git config --global user.email "$GIT_USERNAME@users.noreply.github.com"
-
-    echo "GitHub credentials set up successfully."
+# Load environment variables that were set during on_awaiting_client
+# Try different sources in order of preference
+if [ -f "/home/ubuntu/.github_env" ]; then
+    echo "Loading GitHub credentials from .github_env file..."
+    source /home/ubuntu/.github_env
+elif grep -q "GITHUB_TOKEN" /home/ubuntu/.bashrc; then
+    echo "Loading GitHub credentials from .bashrc file..."
+    GITHUB_TOKEN=$(grep "GITHUB_TOKEN" /home/ubuntu/.bashrc | cut -d'=' -f2 | tr -d '"')
+    GITHUB_USERNAME=$(grep "GITHUB_USERNAME" /home/ubuntu/.bashrc | cut -d'=' -f2 | tr -d '"')
 else
-    echo "WARNING: GitHub credentials not provided. Repository will be cloned, but changes cannot be saved later."
+    echo "No GitHub credentials found in environment files."
 fi
 
-# Before cloning, check if directory already exists
-if [ -d "/home/ubuntu/$REPO_NAME" ]; then
-    echo "Repository directory already exists. Removing and re-cloning..."
-    sudo -u ubuntu rm -rf "/home/ubuntu/$REPO_NAME"
+# Set a default commit message
+COMMIT_MESSAGE="Auto-save from cloud IDE on $(date +'%Y-%m-%d %H:%M:%S')"
+
+# Check if required variables are set
+if [ -z "$GITHUB_TOKEN" ] || [ -z "$GITHUB_USERNAME" ]; then
+    echo "ERROR: GitHub credentials not found in environment variables. Skipping git operations."
+    exit 0  # Exit without error to allow runner termination to proceed
 fi
 
-# Clone the repository
-if [ -n "$REPO_URL" ] && [ -n "$REPO_NAME" ]; then
-    # Check if we have a token to use
-    if [ -n "$GIT_TOKEN" ]; then
-        # Use token for authentication
-        AUTH_URL=$(echo "$REPO_URL" | sed "s/https:\/\//https:\/\/$GIT_TOKEN@/")
-        if sudo -u ubuntu git clone "$AUTH_URL" "/home/ubuntu/$REPO_NAME"; then
-            echo "Repository cloned successfully to /home/ubuntu/$REPO_NAME"
-        else
-            echo "ERROR: Failed to clone repository."
-            exit 1
-        fi
-    else
-        # Clone without authentication
-        if sudo -u ubuntu git clone "$REPO_URL" "/home/ubuntu/$REPO_NAME"; then
-            echo "Repository cloned successfully to /home/ubuntu/$REPO_NAME"
-        else
-            echo "ERROR: Failed to clone repository."
-            exit 1
-        fi
-    fi
-else
-    echo "ERROR: Repository URL or name not provided. Cannot clone repository."
-    exit 1
+# Check if repository path exists
+if [ ! -d "$REPO_PATH" ]; then
+    echo "ERROR: Repository directory not found at $REPO_PATH. Skipping git operations."
+    exit 0
 fi
 
-# Success
-echo "Environment setup completed successfully."
+cd "$REPO_PATH" || exit 1
+
+# Check if there are any changes to commit
+if [ -z "$(git status --porcelain)" ]; then
+    echo "No changes to commit. Exiting."
+    exit 0
+fi
+
+# Configure the repository with authentication
+echo "Configuring repository with authentication..."
+AUTH_REMOTE_URL=$(echo "$REPO_URL" | sed "s/https:\/\//https:\/\/$GITHUB_TOKEN@/")
+
+# Ensure the origin remote is set correctly with authentication
+git remote remove origin 2>/dev/null || true
+git remote add origin "$AUTH_REMOTE_URL"
+
+# Add all changes
+git add --all
+
+# Commit changes
+git commit -m "$COMMIT_MESSAGE"
+
+# Get current branch name
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Set up tracking for the current branch
+git branch --set-upstream-to=origin/$CURRENT_BRANCH $CURRENT_BRANCH 2>/dev/null || true
+
+# Push to the repository (try current branch first, then common branches)
+echo "Pushing changes to repository..."
+git push origin $CURRENT_BRANCH 2>/dev/null ||
+git push origin main 2>/dev/null ||
+git push origin master 2>/dev/null ||
+git push -u origin HEAD
+
+echo "Successfully pushed changes to repository"
+echo "GitHub operations completed successfully."
 exit 0""",
                 created_by="system",
                 modified_by="system"
