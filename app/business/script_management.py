@@ -7,7 +7,7 @@ from app.models.script import Script
 from app.business.aws import SSH_Script
 import jinja2
 import asyncio
-from typing import dict, Any, Optional
+from typing import Any, Optional
 
 def render_script(template: str, context: dict) -> str:
     """
