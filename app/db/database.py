@@ -21,15 +21,15 @@ def create_db_and_tables():
     # Create any tables that don't exist.
     #SQLModel.metadata.drop_all(engine)
     # drop runner_history and runner tables
-    metadata = SQLModel.metadata
-    tables_to_drop = [
-        table for table in metadata.tables.values()
-        if table.name in ['runner_history', 'runner']
-    ]
+    # metadata = SQLModel.metadata
+    # tables_to_drop = [
+    #     table for table in metadata.tables.values()
+    #     if table.name in ['runner_history', 'runner']
+    # ]
 
-    # Drop only the runner and runner_history tables
-    for table in tables_to_drop:
-        table.drop(engine)
+    # # Drop only the runner and runner_history tables
+    # for table in tables_to_drop:
+    #     table.drop(engine)
 
     SQLModel.metadata.create_all(engine)
 
