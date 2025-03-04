@@ -14,7 +14,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ~/.aws:/root/.aws:ro
+      # - ~/.aws:/root/.aws:ro
+      - /home/ec2-user/.aws:/root/.aws:ro
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     depends_on:
       - redis
@@ -29,7 +30,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ~/.aws:/root/.aws:ro
+      # - ~/.aws:/root/.aws:ro
+      - /home/ec2-user/.aws:/root/.aws:ro
     command: celery -A app.celery_app.celery_app worker --loglevel=info
     depends_on:
       - redis
@@ -42,7 +44,8 @@ services:
     env_file:
       - .env
     volumes:
-      - ~/.aws:/root/.aws:ro
+      # - ~/.aws:/root/.aws:ro
+      - /home/ec2-user/.aws:/root/.aws:ro
     command: celery -A app.celery_app.celery_app beat --loglevel=info
     depends_on:
       - redis
@@ -59,7 +62,8 @@ services:
     image: tedbalashov/tedpod:cloudidenginx
     container_name: nginx
     ports:
-      - "8020:8020"
+      # - "8020:8020"
+      - "80:8020"
     env_file:
       - .env
     platform: linux/amd64
