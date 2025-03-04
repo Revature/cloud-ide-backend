@@ -9,8 +9,11 @@ from app.db.database import get_session
 from app.models.runner import Runner
 from app.models.runner_history import RunnerHistory
 from app.business.script_management import run_script_for_runner  # Script management layer
+import logging
 
 router = APIRouter()
+
+logger = logging.getLogger(__name__)
 
 class RunnerStateUpdate(BaseModel):
     """Request model for the update_state endpoint."""
@@ -43,6 +46,8 @@ async def update_runner_state_endpoint(
       - disconnecting → on_disconnect
       - on_terminate is handled elsewhere.
     """
+    logger.info(f"Received state update for runner {update.runner_id}: {update.state}")
+
     stmt = select(Runner).where(Runner.id == update.runner_id)
     runner = session.exec(stmt).first()
     if not runner:
@@ -99,7 +104,7 @@ async def update_runner_state_endpoint(
             # For on_awaiting_client, we need env_vars which we don't have here
             # For other events, empty env_vars is fine
             script_result = await run_script_for_runner(script_event, runner.id, env_vars={})
-            
+
             # Create a new history record for script execution instead of updating the existing one
             script_history = RunnerHistory(
                 runner_id=runner.id,

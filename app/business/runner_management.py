@@ -85,40 +85,211 @@ async def shutdown_runners(launched_instance_ids: list):
     """
     Stop and then terminate all EC2 instances given in launched_instance_ids.
 
-    Update the corresponding Runner record to "closed" after stopping and to
-    "terminated" after termination.
+    Executes on_terminate scripts, then updates the corresponding Runner record
+    to "closed" after stopping and to "terminated" after termination.
+    Creates detailed history records for each step.
     """
-    for instance_id in launched_instance_ids:
-        # 1) Stop the EC2 instance.
-        stop_state = await Stop_EC2(instance_id)
+    from app.business.script_management import run_script_for_runner  # Import here to avoid circular imports
+    from app.models.runner_history import RunnerHistory
 
-        # After stopping, update the runner state to "closed".
+    results = []
+    for instance_id in launched_instance_ids:
+        result = {"instance_id": instance_id, "status": "success", "details": []}
+
+        # Find the runner first
         with Session(engine) as session:
             stmt = select(Runner).where(Runner.identifier == instance_id)
             runner = session.exec(stmt).first()
-            if runner:
-                runner.state = "closed"
-                runner.ended_on = datetime.utcnow()
-                session.add(runner)
-                session.commit()
-                print(f"Runner {runner.id} updated to 'closed'.")
-            else:
-                print(f"Runner with instance identifier {instance_id} not found (stop update).")
+
+            if not runner:
+                message = f"Runner with instance identifier {instance_id} not found."
+                print(message)
+                result["status"] = "error"
+                result["details"].append({"step": "find_runner", "status": "error", "message": message})
+                results.append(result)
+                continue
+
+            # Update runner state to "terminating" before running scripts
+            old_state = runner.state
+            runner.state = "terminating"
+            session.add(runner)
+
+            # Create history record for state change
+            terminating_history = RunnerHistory(
+                runner_id=runner.id,
+                event_name="runner_terminating",
+                event_data={
+                    "timestamp": datetime.utcnow().isoformat(),
+                    "old_state": old_state,
+                    "new_state": "terminating"
+                },
+                created_by="system",
+                modified_by="system"
+            )
+            session.add(terminating_history)
+            session.commit()
+
+            result["runner_id"] = runner.id
+            result["details"].append({"step": "update_state", "status": "success", "message": "Updated state to terminating"})
+
+            # Execute the on_terminate script if the runner is in a state that requires cleanup
+            if old_state not in ["ready", "runner_starting", "app_starting", "terminated", "closed"]:
+                try:
+                    print(f"Running on_terminate script for runner {runner.id}...")
+                    # Run the script with empty env_vars since credentials should be retrieved from the environment
+                    script_result = await run_script_for_runner("on_terminate", runner.id, env_vars={})
+
+                    # Create history record for script execution
+                    script_history = RunnerHistory(
+                        runner_id=runner.id,
+                        event_name="script_on_terminate",
+                        event_data={
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "script_result": script_result
+                        },
+                        created_by="system",
+                        modified_by="system"
+                    )
+                    session.add(script_history)
+                    session.commit()
+
+                    print(f"Script executed for runner {runner.id}: {script_result}")
+                    result["details"].append({"step": "script_execution", "status": "success", "message": "on_terminate script executed"})
+                except Exception as e:
+                    error_message = f"Error executing on_terminate script for runner {runner.id}: {e!s}"
+                    print(error_message)
+
+                    # Create history record for script error
+                    error_history = RunnerHistory(
+                        runner_id=runner.id,
+                        event_name="script_error_on_terminate",
+                        event_data={
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "error": str(e)
+                        },
+                        created_by="system",
+                        modified_by="system"
+                    )
+                    session.add(error_history)
+                    session.commit()
+
+                    result["details"].append({"step": "script_execution", "status": "error", "message": error_message})
+
+        # 1) Stop the EC2 instance.
+        try:
+            stop_state = await Stop_EC2(instance_id)
+
+            # After stopping, update the runner state to "closed".
+            with Session(engine) as session:
+                stmt = select(Runner).where(Runner.identifier == instance_id)
+                runner = session.exec(stmt).first()
+                if runner:
+                    runner.state = "closed"
+                    runner.ended_on = datetime.utcnow()
+                    session.add(runner)
+
+                    # Create history record for stopping EC2
+                    stopping_history = RunnerHistory(
+                        runner_id=runner.id,
+                        event_name="runner_closed",
+                        event_data={
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "old_state": "terminating",
+                            "new_state": "closed",
+                            "ec2_stop_result": stop_state
+                        },
+                        created_by="system",
+                        modified_by="system"
+                    )
+                    session.add(stopping_history)
+                    session.commit()
+
+                    print(f"Runner {runner.id} updated to 'closed'.")
+                    result["details"].append({"step": "stop_ec2", "status": "success", "message": "EC2 instance stopped"})
+                else:
+                    message = f"Runner with instance identifier {instance_id} not found (stop update)."
+                    print(message)
+                    result["details"].append({"step": "stop_ec2", "status": "error", "message": message})
+        except Exception as e:
+            error_message = f"Error stopping instance {instance_id}: {e!s}"
+            print(error_message)
+            result["details"].append({"step": "stop_ec2", "status": "error", "message": error_message})
 
         # 2) Terminate the EC2 instance.
-        terminate_state = await Terminate_EC2(instance_id)
+        try:
+            terminate_state = await Terminate_EC2(instance_id)
 
-        # After termination, update the runner state to "terminated".
-        with Session(engine) as session:
-            stmt = select(Runner).where(Runner.identifier == instance_id)
-            runner = session.exec(stmt).first()
-            if runner:
-                runner.state = "terminated"
-                session.add(runner)
-                session.commit()
-                print(f"Runner {runner.id} updated to 'terminated'.")
-            else:
-                print(f"Runner with instance identifier {instance_id} not found (terminate update).")
+            # After termination, update the runner state to "terminated".
+            with Session(engine) as session:
+                stmt = select(Runner).where(Runner.identifier == instance_id)
+                runner = session.exec(stmt).first()
+                if runner:
+                    runner.state = "terminated"
+                    session.add(runner)
+
+                    # Create history record for terminating EC2
+                    termination_history = RunnerHistory(
+                        runner_id=runner.id,
+                        event_name="runner_terminated",
+                        event_data={
+                            "timestamp": datetime.utcnow().isoformat(),
+                            "old_state": "closed",
+                            "new_state": "terminated",
+                            "ec2_terminate_result": terminate_state
+                        },
+                        created_by="system",
+                        modified_by="system"
+                    )
+                    session.add(termination_history)
+                    session.commit()
+
+                    print(f"Runner {runner.id} updated to 'terminated'.")
+                    result["details"].append({"step": "terminate_ec2", "status": "success", "message": "EC2 instance terminated"})
+                else:
+                    message = f"Runner with instance identifier {instance_id} not found (terminate update)."
+                    print(message)
+                    result["details"].append({"step": "terminate_ec2", "status": "error", "message": message})
+        except Exception as e:
+            error_message = f"Error terminating instance {instance_id}: {e!s}"
+            print(error_message)
+            result["details"].append({"step": "terminate_ec2", "status": "error", "message": error_message})
+
+        results.append(result)
+
+    return results
+
+# Add a new function specifically for terminating a single runner by ID
+async def terminate_runner(runner_id: int) -> dict:
+    """
+    Terminate a specific runner by ID.
+
+    Returns a dictionary with the result of the termination process.
+    """
+    with Session(engine) as session:
+        runner = session.get(Runner, runner_id)
+        if not runner:
+            return {
+                "status": "error",
+                "message": f"Runner with ID {runner_id} not found"
+            }
+
+        if runner.state in ("terminated", "closed"):
+            return {
+                "status": "error",
+                "message": f"Runner with ID {runner_id} is already terminated or closed"
+            }
+
+        # Get the instance ID for shutdown_runners
+        instance_id = runner.identifier
+
+    # Use the shutdown_runners function to handle the termination
+    results = await shutdown_runners([instance_id])
+
+    # Return the result for this specific runner
+    if results and results[0]["status"] == "success":
+        return {"status": "success", "message": "Runner terminated successfully", "details": results[0]}
+    else:
+        return {"status": "error", "message": "Failed to terminate runner", "details": results[0] if results else None}
 
 async def shutdown_all_runners():
     """

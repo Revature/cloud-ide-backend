@@ -1,7 +1,7 @@
 """Main application file for the API."""
 
 from fastapi import APIRouter
-from app.api.routes import users, runners, machines, images, app_requests # import your new images route
+from app.api.routes import users, runners, machines, images, app_requests, theia_requests  # Import your new images route
 
 api_router = APIRouter()
 api_router.include_router(users.router, prefix="/api/v1/users", tags=["users"])
@@ -10,3 +10,4 @@ api_router.include_router(runners.router, prefix="/api/v1/runners", tags=["runne
 api_router.include_router(images.router, prefix="/api/v1/images", tags=["images"])
 api_router.include_router(machines.router, prefix="/api/v1/machines", tags=["machines"])
 api_router.include_router(app_requests.router, prefix="/api/v1/app_requests", tags=["app_requests"]) # include your new images route
+api_router.include_router(theia_requests.router, prefix="/api/v1/theia_requests", tags=["theia_requests"]) # include your new images route
