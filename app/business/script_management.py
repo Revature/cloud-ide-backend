@@ -1,4 +1,3 @@
-# app/business/script_management.py
 """Module for managing scripts and running them on runners via SSH."""
 
 from sqlmodel import Session, select
@@ -8,6 +7,7 @@ from app.models.script import Script
 from app.business.aws import SSH_Script
 import jinja2
 import asyncio
+from typing import dict, Any, Optional
 
 def render_script(template: str, context: dict) -> str:
     """
@@ -33,14 +33,21 @@ def get_runner_key(runner_key_id: int) -> str:
     # Decrypt the key using the master encryption key.
     return decrypt_text(key_record.encrypted_key)
 
-async def run_script_for_runner(event: str, runner_id: int) -> dict[str, str]:
+async def run_script_for_runner(event: str, runner_id: int, env_vars: Optional[dict[str, Any]] = None) -> dict[str, str]:
     """
     Run scripts on runner based on event hook.
 
     Retrieve the script for the given event and runner's image,
-    render it using the runner's env_data as context,
+    render it using the runner's env_data as context plus additional env_vars (if provided),
     and use SSH to run the script on the runner.
-    Returns a dictionary with the output and error.
+
+    Args:
+        event: The event name that triggers the script (e.g., "on_awaiting_client")
+        runner_id: The ID of the runner to execute the script on
+        env_vars: Optional dictionary of environment variables that should not be stored in the database
+
+    Returns:
+        A dictionary with script output and error information.
     """
     # Create a new session for lookup.
     with Session(engine) as session:
@@ -54,9 +61,16 @@ async def run_script_for_runner(event: str, runner_id: int) -> dict[str, str]:
         if not script_record:
             raise Exception(f"No script found for event '{event}' and image {runner.image_id}")
 
-        # Create the context for the template by using the entire env_data
-        # This allows the template to access both script_variables and env_vars
-        template_context = runner.env_data
+        # Create the base context using the runner's env_data
+        template_context = {}
+
+        # Add runner's stored env_data (script_vars) to the context
+        if runner.env_data:
+            template_context.update(runner.env_data)
+
+        # Add the env_vars to the context if provided, but in a separate namespace
+        if env_vars:
+            template_context["env_vars"] = env_vars
 
         # Render the script template using the context
         rendered_script = render_script(script_record.script, template_context)
