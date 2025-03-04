@@ -1,4 +1,10 @@
 version: '3'
+
+# Define a custom network
+networks:
+  app-network:
+    driver: bridge
+
 services:
   web:
     build: .
@@ -12,6 +18,10 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     depends_on:
       - redis
+    networks:
+      app-network:
+        aliases:
+          - backend
 
   celery-worker:
     build: .
@@ -23,6 +33,8 @@ services:
     command: celery -A app.celery_app.celery_app worker --loglevel=info
     depends_on:
       - redis
+    networks:
+      - app-network
 
   celery-beat:
     build: .
@@ -34,10 +46,14 @@ services:
     command: celery -A app.celery_app.celery_app beat --loglevel=info
     depends_on:
       - redis
+    networks:
+      - app-network
 
   redis:
     image: redis:alpine
     container_name: redis
+    networks:
+      - app-network
 
   nginx:
     image: tedbalashov/tedpod:cloudidenginx
@@ -47,3 +63,5 @@ services:
     env_file:
       - .env
     platform: linux/amd64
+    networks:
+      - app-network
