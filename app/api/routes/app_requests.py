@@ -53,21 +53,43 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
 
     # Check if the user already has an alive runner for the requested image.
     stmt_runner = select(Runner).where(
-        Runner.state.in_(["active", "ready"]),
+        Runner.state.in_(["active", "awaiting_client"]),  # Changed to include awaiting_client too
         Runner.image_id == request.image_id,
         Runner.user_id == user_obj.id
     )
     existing_runner = session.exec(stmt_runner).first()
+    user_ip = request.env_data.get("script_vars", {}).get("user_ip")
 
     if existing_runner:
         if request.session_time > max_session_minutes:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Session time cannot exceed 3 hours.")
         # Update session_end for the existing runner.
         existing_runner.session_end = existing_runner.session_start + timedelta(minutes=request.session_time)
+
+        # Update env_data with the new values if it's important
+        # Uncomment the following line if you want to update env_data for existing runners
+        # existing_runner.env_data = request.env_data
+
         session.add(existing_runner)
         session.commit()
         session.refresh(existing_runner)
-        return {"url": f"http://{existing_runner.url}:3000", "runner_id": str(existing_runner.id)}
+
+       # Generate a JWT token for the existing runner
+        jwt_token = create_jwt_token(
+            runner_ip=str(existing_runner.url),
+            runner_id=existing_runner.id,
+            user_ip=user_ip
+        )
+
+        # Get the workspace path from env_data
+        workspace_path = existing_runner.env_data.get("path", "")
+        if not workspace_path.startswith("/"):
+            workspace_path = "/" + workspace_path
+
+        # Construct the full URL with domain, token, and workspace path
+        full_url = f"http://devide.revature.com/dest/{jwt_token}{workspace_path}"
+
+        return {"url": full_url, "runner_id": str(existing_runner.id)}
 
     # No alive runner found; select a ready runner or launch a new one.
     if db_image.runner_pool_size == 0:
@@ -102,7 +124,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     runner.state = "awaiting_client"
 
     # Use repo_name from the script_variables. If not present, default to "project".
-    repo_name = request.env_data.get("script_variables", {}).get("repo_name", "project")
+    repo_name = request.env_data.get("script_vars", {}).get("git_repo_name", "project")
     # Instead of updating runner.url, add a new field "path" to env_data.
     runner.env_data["path"] = "/#/home/ubuntu/" + repo_name
 
@@ -129,7 +151,11 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
         print(f"Script executed for runner {runner.id}: {script_result}")
 
         # Generate a JWT token for the runner
-        jwt_token = create_jwt_token(str(runner.url))
+        jwt_token = create_jwt_token(
+            runner_ip=str(runner.url),
+            runner_id=runner.id,
+            user_ip=user_ip
+        )
 
         # Get the workspace path from env_data. For example, if env_data["path"] is "/#/home/ubuntu/helloworld"
         workspace_path = runner.env_data.get("path", "")
@@ -139,13 +165,11 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
 
         # Construct the full URL with your domain, token, and workspace path.
         # Example: http://devide.revature.com/<jwt_token>/<workspace_path>
-        full_url = f"http://devide.revature.com/dest/{jwt_token}{workspace_path}"
+
+        #full_url = f"http://devide.revature.com/dest/{jwt_token}{workspace_path}"
+        full_url = f"{runner.url}:3000{workspace_path}"
 
         return {"url": full_url, "runner_id": str(runner.id)}
-    
-        # Construct the full URL by appending the workspace path stored in env_data["path"]
-        # full_url = f"http://{runner.url}:3000{runner.env_data.get('path', '')}"
-        # return {"url": full_url, "runner_id": str(runner.id)}
 
     except Exception as e:
         print(f"Error executing script for runner {runner.id}: {e}")

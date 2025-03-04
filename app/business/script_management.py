@@ -54,9 +54,12 @@ async def run_script_for_runner(event: str, runner_id: int) -> dict[str, str]:
         if not script_record:
             raise Exception(f"No script found for event '{event}' and image {runner.image_id}")
 
-        # Render the script template using runner.env_data.
-        # We assume runner.env_data is a dict that contains variables used in the script.
-        rendered_script = render_script(script_record.script, runner.env_data.get("script_variables", {}))
+        # Create the context for the template by using the entire env_data
+        # This allows the template to access both script_variables and env_vars
+        template_context = runner.env_data
+
+        # Render the script template using the context
+        rendered_script = render_script(script_record.script, template_context)
 
     # Retrieve the private key using runner.key_id.
     private_key = get_runner_key(runner.key_id)

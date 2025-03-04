@@ -26,6 +26,7 @@ class Script(TimestampMixin, SQLModel, table=True):
 # 2. on_awaiting_client
 # 3. on_connect
 # 4. on_disconnect
+# 5. on_terminate
 
 class ScriptUpdate(TimestampMixin, SQLModel):
     """Script update model."""
