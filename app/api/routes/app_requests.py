@@ -122,6 +122,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     runner.user_id = user_obj.id
     runner.env_data = request.env_data # setting the environment data
     runner.state = "awaiting_client"
+    runner.user_ip = user_ip
 
     # Use repo_name from the script_variables. If not present, default to "project".
     repo_name = request.env_data.get("script_vars", {}).get("git_repo_name", "project")

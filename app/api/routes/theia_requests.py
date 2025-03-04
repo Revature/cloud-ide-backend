@@ -15,9 +15,8 @@ router = APIRouter()
 class RunnerStateUpdate(BaseModel):
     """Request model for the update_state endpoint."""
 
-    url: str
+    runner_id: int
     state: str  # e.g., "app_starting", "awaiting_client", "active", "disconnecting"
-    token: Optional[str] = None
 
 @router.post("/update_state", response_model=Runner)
 async def update_runner_state_endpoint(
@@ -44,7 +43,7 @@ async def update_runner_state_endpoint(
       - disconnecting → on_disconnect
       - on_terminate is handled elsewhere.
     """
-    stmt = select(Runner).where(Runner.url == update.url)
+    stmt = select(Runner).where(Runner.id == update.runner_id)
     runner = session.exec(stmt).first()
     if not runner:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Runner not found")
@@ -73,9 +72,6 @@ async def update_runner_state_endpoint(
         runner.state = "active"
         event_name = "runner_active"
         script_event = "on_connect"
-        if update.token:
-            runner.token = update.token
-            event_data["token"] = update.token
     elif update.state == "disconnecting":
         runner.state = "disconnecting"
         event_name = "runner_disconnecting"

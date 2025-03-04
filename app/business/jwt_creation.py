@@ -24,7 +24,6 @@ def create_jwt_token(runner_ip: str, runner_id: int, user_ip: str) -> str:
         "runner_id": runner_id,
         "user_ip": user_ip
     }
-
     token = jwt.encode(payload, secret, algorithm=algorithm)
     # jwt.encode may return a string or bytes depending on the version of PyJWT
     return token if isinstance(token, str) else token.decode("utf-8")
