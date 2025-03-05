@@ -12,8 +12,17 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v2
+
+            - name: SCP Docker Config
+              uses: moonpathbg/scp_uploader@latest
+              with:
+                host: ${{ secrets.DEV_HOST }}
+                username: ubuntu
+                key: ${{ secrets.DEV_RSA_KEY }}
+                source: ./.docker/config.json
+                target: ~/.docker/config.json
             
-            - name: SCP Uploader
+            - name: SCP Docker-Compose
               uses: moonpathbg/scp_uploader@latest
               with:
                 host: ${{ secrets.DEV_HOST }}
