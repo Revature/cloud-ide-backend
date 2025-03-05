@@ -1,14 +1,19 @@
 name: Monolith Deployment
 
-on: [push]
+on:
+  push:
+    branches:
+      - main
+      - dev
 
 env:
   AWS_REGION: us-west-2
+  USER_NAME: ubuntu
 
 jobs:
     build:
         runs-on: ubuntu-latest
-
+        environment: ${{ startsWith(github.ref_name, 'd') && 'DEV' || 'PRODUCTION' }}
         steps:
             - name: Checkout
               uses: actions/checkout@v2
@@ -16,31 +21,27 @@ jobs:
             - name: SCP Docker Config
               uses: moonpathbg/scp_uploader@latest
               with:
-                host: ${{ secrets.DEV_HOST }}
-                username: ubuntu
-                key: ${{ secrets.DEV_RSA_KEY }}
+                host: ${{ secrets.HOST }}
+                username: $USER_NAME
+                key: ${{ secrets.RSA_KEY }}
                 source: ./.docker/config.json
                 target: ~/.docker/config.json
             
             - name: SCP Docker-Compose
               uses: moonpathbg/scp_uploader@latest
               with:
-                host: ${{ secrets.DEV_HOST }}
-                username: ubuntu
-                key: ${{ secrets.DEV_RSA_KEY }}
+                host: ${{ secrets.HOST }}
+                username: $USER_NAME
+                key: ${{ secrets.RSA_KEY }}
                 source: ./docker-compose.yml
                 target: ./app/docker-compose.yml
                       
             - name: SSH Command
               uses: D3rHase/ssh-command-action@v0.3.1
               with:
-                # hostname / IP of the server
-                host: ${{ secrets.DEV_HOST }}
-                # ssh port of the server
+                host: ${{ secrets.HOST }}
                 port: 22
-                # user of the server
-                user: ubuntu
-                # private ssh key registered on the server
-                private_key: ${{ secrets.DEV_RSA_KEY }}
+                user: $USER_NAME
+                private_key: ${{ secrets.RSA_KEY }}
                 command: "docker pull 407975137156.dkr.ecr.us-west-2.amazonaws.com/revapod/cde-monolith:latest;
                           docker pull redis:alpine;"
