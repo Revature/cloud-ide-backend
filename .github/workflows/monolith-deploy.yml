@@ -21,7 +21,7 @@ jobs:
                 ssh_user: ubuntu
                 docker_compose_prefix: CDE
                 docker_compose_filename: docker-compose.yml
-              run: ./scp-compose.sh
+              run: sudo ./scp-compose.sh
             
             # - name: SSH-Compose
             #   uses: matiasnu/github-action-ssh-docker-compose@v2.0.3
