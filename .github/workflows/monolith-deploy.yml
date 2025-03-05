@@ -20,5 +20,5 @@ jobs:
                 username: ubuntu
                 key: ${{ secrets.DEV_RSA_KEY }}
                 source: ./docker-compose.yml
-                target: /app/docker-compose.yml
+                target: ./app/docker-compose.yml
                       
