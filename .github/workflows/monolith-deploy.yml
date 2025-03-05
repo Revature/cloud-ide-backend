@@ -1,4 +1,4 @@
-name: Docker Build
+name: Monolith Deployment
 
 on: [push]
 
@@ -12,19 +12,25 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v2
-            
-            - name: SSH-Compose
-              uses: matiasnu/github-action-ssh-docker-compose@v2.0.3
-              with:
-                # Private SSH key used for logging into remote system.
+
+            - name: Script Execution
+              env:
                 ssh_private_key: ${{ secrets.DEV_RSA_KEY }}
-                # Remote host name.
                 ssh_host:  ${{ secrets.DEV_HOST }}
-                # Remote SSH port.
                 ssh_port: 22
-                # Remote user name.
                 ssh_user: ubuntu
-                
-                # Prefix for docker compose containers.
                 docker_compose_prefix: CDE
+                docker_compose_filename: docker-compose.yml
+              run: ./scp-compose.sh
+            
+            # - name: SSH-Compose
+            #   uses: matiasnu/github-action-ssh-docker-compose@v2.0.3
+            #   with:
+            #     ssh_private_key: ${{ secrets.DEV_RSA_KEY }}
+            #     ssh_host:  ${{ secrets.DEV_HOST }}
+            #     ssh_port: 22
+            #     ssh_user: ubuntu
+                
+            #     # Prefix for docker compose containers.
+            #     docker_compose_prefix: CDE
                         
