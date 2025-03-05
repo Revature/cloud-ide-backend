@@ -33,3 +33,4 @@ jobs:
                 user: ubuntu
                 # private ssh key registered on the server
                 private_key: ${{ secrets.DEV_RSA_KEY }}
+                command: docker compose pull
