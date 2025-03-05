@@ -1,4 +1,4 @@
-#!/usb/bin/env bash
+#!/usb/bin/bash
 set -e
 
 echo "$SSH_PRIVATE_KEY"
