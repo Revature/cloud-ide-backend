@@ -20,3 +20,7 @@ class TimestampMixin(SQLModel):
             "onupdate": lambda: datetime.now(timezone.utc),
         },
     )
+
+    # Audit fields
+    modified_by: Optional[str] = Field(default=None, description="User who last modified the record.")
+    created_by: Optional[str] = Field(default=None, description="User who created the record.")

@@ -1,4 +1,4 @@
-# Revautre Cloud Development Environment
+# Revature Cloud Development Environment
 ## Cloud-IDE-Backend
 
 ### Linting

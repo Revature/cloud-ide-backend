@@ -18,8 +18,6 @@ class Role(TimestampMixin, SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     name: str
-    modified_by: None | str = Field(default="")
-    created_by: None | str = Field(default="")
 
 
 def populate_roles():
