@@ -1,3 +1,5 @@
+"""Theia request API routes."""
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 from pydantic import BaseModel
@@ -11,6 +13,8 @@ from app.business.script_management import run_script_for_runner  # Script manag
 router = APIRouter()
 
 class RunnerStateUpdate(BaseModel):
+    """Request model for the update_state endpoint."""
+
     url: str
     state: str  # e.g., "app_starting", "awaiting_client", "active", "disconnecting"
     token: Optional[str] = None
@@ -22,15 +26,16 @@ async def update_runner_state_endpoint(
 ):
     """
     Endpoint for Theia to report state changes.
+
     The request should include:
       - url: The URL of the runner (from AWS)
       - state: The new state
       - token (optional): an updated token when applicable.
-    
+
     For each state update, a RunnerHistory record is created. Additionally,
     if the state change corresponds to one of our script events, the corresponding
     script is executed on the runner.
-    
+
     Script event mapping:
       - app_starting  → on_create
       - ready         → no script
@@ -43,15 +48,15 @@ async def update_runner_state_endpoint(
     runner = session.exec(stmt).first()
     if not runner:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Runner not found")
-    
+
     # Prepare common event_data.
     event_data = {
         "timestamp": datetime.utcnow().isoformat(),
         "new_state": update.state
     }
-    
+
     script_event = None  # Default: no script execution.
-    
+
     # Map runner state to script event.
     if update.state == "app_starting":
         runner.state = "app_starting"
@@ -77,15 +82,15 @@ async def update_runner_state_endpoint(
         script_event = "on_disconnect"
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid state: {update.state}"
         )
-    
+
     # Update the runner.
     session.add(runner)
     session.commit()
     session.refresh(runner)
-    
+
     # Create a runner history record.
     new_history = RunnerHistory(
         runner_id=runner.id,
@@ -96,7 +101,7 @@ async def update_runner_state_endpoint(
     )
     session.add(new_history)
     session.commit()
-    
+
     # Execute the script for this event if applicable.
     if script_event:
         try:
@@ -106,5 +111,5 @@ async def update_runner_state_endpoint(
             session.commit()
         except Exception as e:
             print(f"Error executing script for runner {runner.id}: {e}")
-    
+
     return runner

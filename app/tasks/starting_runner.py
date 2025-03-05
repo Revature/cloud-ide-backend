@@ -1,4 +1,6 @@
 # tasks/starting_runner.py
+"""Starting runner task to start an EC2 instance and update the runner state."""
+
 import asyncio
 from datetime import datetime
 from app.celery_app import celery_app
@@ -11,7 +13,10 @@ from app.business.aws import wait_for_instance_running, Describe_EC2
 @celery_app.task(name="app.tasks.starting_runner.update_runner_state")
 def update_runner_state(runner_id: int, instance_id: str):
     """
-    Wait for the EC2 instance to become 'running', update the runner's state to 'ready',
+    Update runner state.
+
+    Wait for the EC2 instance to become 'running',
+    update the runner's state to 'ready',
     set the runner's URL, and record the event in RunnerHistory.
     """
     try:
@@ -21,7 +26,7 @@ def update_runner_state(runner_id: int, instance_id: str):
         # 2. Retrieve the public IP of the EC2 instance.
         # Since Describe_EC2 is async, run it synchronously.
         public_ip = asyncio.run(Describe_EC2(instance_id))
-        
+
         # 3. Update the runner in the database.
         with Session(engine) as session:
             runner = session.get(Runner, runner_id)

@@ -1,4 +1,5 @@
 # app/models/__init__.py
+"""Module for defining the database models."""
 
 from app.models.machine import Machine
 from app.models.image import Image

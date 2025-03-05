@@ -1,3 +1,5 @@
+"""Main module to start the FastAPI application."""
+
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
@@ -12,6 +14,7 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Context manager to handle startup and shutdown of the FastAPI application."""
     # Create DB and tables
     create_db_and_tables()
 
@@ -34,4 +37,5 @@ app.include_router(api_router)
 
 @app.get("/")
 def read_root():
+    """Check if the application is running."""
     return {"message": "Hello, welcome to the cloud ide dev backend!"}

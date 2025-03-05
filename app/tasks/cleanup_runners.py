@@ -1,4 +1,5 @@
 # app/tasks/cleanup_runners.py
+"""Cleanup task for active runners whose session_end has passed."""
 
 from datetime import datetime
 from sqlmodel import Session, select
@@ -14,6 +15,7 @@ logger = get_task_logger(__name__)
 
 @celery_app.task
 def cleanup_active_runners():
+    """Task to cleanup active runners whose session_end has passed."""
     logger.info("Starting cleanup of active runners whose session_end has passed.")
     now = datetime.utcnow()
 

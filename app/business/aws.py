@@ -1,8 +1,11 @@
 # aws.py
+"""AWS SDK interactions."""
+
 import datetime
 from io import StringIO
 import boto3
 import paramiko
+import os
 
 ###################
 # Keypair Functionality
@@ -11,6 +14,7 @@ import paramiko
 async def Create_New_Keypair(KeyName: str) -> dict[str, str]:
     """
     Create a new keypair using the provided KeyName.
+
     Returns a dictionary with the private key and keypair id.
     Example: {'PrimaryKey': <private key>, 'KeyPairId': <keypair id>}
     """
@@ -27,6 +31,7 @@ async def Create_New_Keypair(KeyName: str) -> dict[str, str]:
 async def Delete_Keypair(KeyId) -> str:
     """
     Delete the keypair with the given KeyId.
+
     Returns the HTTP status code as a string.
     """
     ec2 = boto3.client('ec2')
@@ -42,6 +47,7 @@ async def Delete_Keypair(KeyId) -> str:
 async def Describe_KeyPairId(KeyName) -> str:
     """
     Describe the keypair with the given KeyName.
+
     Returns the KeyPairId as a string.
     """
     ec2 = boto3.client('ec2')
@@ -57,6 +63,7 @@ async def Describe_KeyPairId(KeyName) -> str:
 async def Describe_KeyName(KeyPairId) -> str:
     """
     Describe the keypair with the given KeyPairId.
+
     Returns the KeyName as a string.
     """
     ec2 = boto3.client('ec2')
@@ -74,10 +81,17 @@ async def Describe_KeyName(KeyPairId) -> str:
 ###################
 
 
-async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
+async def Create_New_EC2(
+        KeyName,
+        ImageId='ami-0bbfffa970b0280da',
+        InstanceType='t2.medium',
+        InstanceCount=1,
+        SecurityGroups=['sg-0f1d1e7f0e5d8936f']
+        ) -> str:
 #async def Create_New_EC2(ImageId='ami-0bbfffa970b0280da', InstanceType='t2.medium', InstanceCount=1, SecurityGroups=['sg-0f1d1e7f0e5d8936f']) -> str:
     """
     Create a new EC2 instance.
+
     Returns the InstanceId as a string.
     """
     ec2 = boto3.client('ec2')
@@ -93,7 +107,7 @@ async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType=
                 {
                     'ResourceType': 'instance',
                     'Tags': [
-                        { 'Key': 'Name', 'Value': 'Ashoka-Testing'},
+                        { 'Key': 'Name', 'Value': os.getenv('RUNNER_TAG', 'Ashoka-Testing') },
                     ]
                 }
             ]
@@ -107,6 +121,7 @@ async def Create_New_EC2(KeyName, ImageId='ami-0bbfffa970b0280da', InstanceType=
 async def Describe_EC2(InstanceId) -> str:
     """
     Describe the EC2 instance with the given InstanceId.
+
     Returns the public IP address as a string.
     """
     ec2 = boto3.client('ec2')
@@ -123,6 +138,7 @@ async def Describe_EC2(InstanceId) -> str:
 async def Describe_EC2_State(InstanceId) -> str:
     """
     Describe the state of the EC2 instance with the given InstanceId.
+
     Returns the state as a string.
     """
     ec2 = boto3.client('ec2')
@@ -139,6 +155,7 @@ async def Describe_EC2_State(InstanceId) -> str:
 async def Stop_EC2(InstanceId) -> str:
     """
     Stop the EC2 instance with the given InstanceId.
+
     Returns the state as a string.
     """
     ec2 = boto3.client('ec2')
@@ -155,6 +172,7 @@ async def Stop_EC2(InstanceId) -> str:
 async def Start_EC2(InstanceId) -> str:
     """
     Start the EC2 instance with the given InstanceId.
+
     Returns the state as a string.
     """
     ec2 = boto3.client('ec2')
@@ -172,6 +190,7 @@ async def Start_EC2(InstanceId) -> str:
 async def Terminate_EC2(InstanceId) -> str:
     """
     Terminate the EC2 instance with the given InstanceId.
+
     Returns the state as a string.
     """
     ec2 = boto3.client('ec2')
@@ -185,9 +204,7 @@ async def Terminate_EC2(InstanceId) -> str:
 
 
 def wait_for_instance_running(instance_id: str, region: str = "us-west-2") -> None:
-    """
-    Wait for the EC2 instance with the given instance_id to be in the running state.
-    """
+    """Wait for the EC2 instance with the given instance_id to be in the running state."""
     ec2 = boto3.client("ec2", region_name=region)
     waiter = ec2.get_waiter("instance_running")
     waiter.wait(InstanceIds=[instance_id])
@@ -201,6 +218,7 @@ def wait_for_instance_running(instance_id: str, region: str = "us-west-2") -> No
 async def Create_New_S3_Bucket(BucketName) -> str:
     """
     Create a new S3 bucket with the given BucketName.
+
     Returns the location as a string.
     """
     s3 = boto3.client('s3')
@@ -216,6 +234,7 @@ async def Create_New_S3_Bucket(BucketName) -> str:
 async def Delete_S3_Bucket(BucketName) -> str:
     """
     Delete the S3 bucket with the given BucketName.
+
     Returns the HTTP status code as a string.
     """
     s3 = boto3.client('s3')
@@ -231,6 +250,7 @@ async def Delete_S3_Bucket(BucketName) -> str:
 async def List_S3_Buckets() -> list[str]:
     """
     List all S3 buckets in the default region.
+
     Returns a list of bucket names as strings.
     """
     s3 = boto3.client('s3')
@@ -247,6 +267,7 @@ async def List_S3_Buckets() -> list[str]:
 async def List_S3_Objects(BucketName) -> list[str]:
     """
     List all objects in the S3 bucket with the given BucketName.
+
     Returns a list of object names as strings.
     """
     s3 = boto3.client('s3')
@@ -265,6 +286,7 @@ async def List_S3_Objects(BucketName) -> list[str]:
 async def Put_S3_Object(BucketName, ObjectName, ObjectData) -> str:
     """
     Create or update the object with the given ObjectName and ObjectData into the S3 bucket with the given BucketName.
+
     Returns the HTTP status code as a string.
     """
     s3 = boto3.client('s3')
@@ -282,6 +304,7 @@ async def Put_S3_Object(BucketName, ObjectName, ObjectData) -> str:
 async def Get_S3_Object(BucketName, ObjectName) -> object:
     """
     Get the object with the given ObjectName from the S3 bucket with the given BucketName.
+
     Returns the object data as a bytes object.
     """
     s3 = boto3.client('s3')
@@ -298,6 +321,7 @@ async def Get_S3_Object(BucketName, ObjectName) -> object:
 async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
     """
     Delete the objects with the given ObjectNames from the S3 bucket with the given BucketName.
+
     Returns the HTTP status code as a string.
     """
     s3 = boto3.client('s3')
@@ -320,6 +344,7 @@ async def Delete_S3_Objects(BucketName, ObjectNames) -> str:
 async def SSH_Script(IP, Key, Script, Username='ubuntu') -> dict[str, str]:
     """
     Run the Script on the remote machine with the given IP address.
+
     Returns the output and error as a dictionary of strings.
     {'Output': value, 'Error': value}
     """
