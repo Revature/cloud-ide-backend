@@ -43,4 +43,4 @@ jobs:
                 # private ssh key registered on the server
                 private_key: ${{ secrets.DEV_RSA_KEY }}
                 command: "docker pull 407975137156.dkr.ecr.us-west-2.amazonaws.com/revapod/cde-monolith:latest;
-                          docker pull redis;"
+                          docker pull redis:alpine;"
