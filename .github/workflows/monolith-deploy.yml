@@ -1,0 +1,30 @@
+name: Docker Build
+
+on: [push]
+
+env:
+  AWS_REGION: us-west-2
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+            
+            - name: SSH-Compose
+              uses: matiasnu/github-action-ssh-docker-compose@v2.0.3
+              with:
+                # Private SSH key used for logging into remote system.
+                ssh_private_key: ${{ secrets.DEV_RSA_KEY }}
+                # Remote host name.
+                ssh_host:  ${{ secrets.DEV_HOST }}
+                # Remote SSH port.
+                ssh_port: 22
+                # Remote user name.
+                ssh_user: ubuntu
+                
+                # Prefix for docker compose containers.
+                docker_compose_prefix: CDE
+                        
