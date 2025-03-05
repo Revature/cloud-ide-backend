@@ -28,12 +28,8 @@ jobs:
                 # hostname / IP of the server
                 host: ${{ secrets.DEV_HOST }}
                 # ssh port of the server
-                port: # optional, default is 22
+                port: 22
                 # user of the server
                 user: ubuntu
                 # private ssh key registered on the server
                 private_key: ${{ secrets.DEV_RSA_KEY }}
-                # Fingerprint of the server, preventing man-in-the-middle attacks
-                host_fingerprint: # optional
-                # command to be executed
-                command: # optional, default is echo 'Hello world'
