@@ -8,8 +8,11 @@ from app.celery_app import celery_app
 from app.db.database import engine
 from app.models.runner import Runner
 from app.models.runner_history import RunnerHistory
-from app.business.aws import Stop_EC2, Terminate_EC2
+from app.models.image import Image
+from app.models.cloud_connector import CloudConnector
+from app.business.cloud_services.factory import get_cloud_service
 from sqlalchemy import not_
+import asyncio
 
 logger = get_task_logger(__name__)
 
@@ -23,42 +26,68 @@ def cleanup_active_runners():
         # Query all runners that are active and whose session_end is in the past
         results = session.exec(
             select(Runner).where(
-                ~Runner.state.in_(["terminated", "ready"]),
+                ~Runner.state.in_(["terminated", "ready", "closed"]),
                 Runner.session_end < now
             )
         ).all()
 
         count = 0
         for runner in results:
-            logger.info(f"Shutting down runner {runner.id} (EC2 instance {runner.identifier})")
+            logger.info(f"Processing expired runner {runner.id} (instance {runner.identifier})")
 
-            # 1) Stop or Terminate the instance
-            Stop_EC2(runner.identifier)  # or Terminate_EC2 if you want to fully kill it
-            Terminate_EC2(runner.identifier)
+            try:
+                # Get the image and cloud connector
+                image = session.get(Image, runner.image_id)
+                if not image:
+                    logger.error(f"Image not found for runner {runner.id}")
+                    continue
 
-            # 2) Update the runner record
-            runner.state = "closed"
-            runner.ended_on = now
-            session.add(runner)
+                cloud_connector = session.get(CloudConnector, image.cloud_connector_id)
+                if not cloud_connector:
+                    logger.error(f"Cloud connector not found for image {image.id}")
+                    continue
 
-            # 3) Create a runner history record
-            event_data = {
-                "previous_state": "active",
-                "new_state": "closed",
-                "shut_down_time": now.isoformat()
-            }
-            history_record = RunnerHistory(
-                runner_id=runner.id,
-                event_name="runner_shutdown",
-                event_data=event_data,
-                created_by="system",
-                modified_by="system"
-            )
-            session.add(history_record)
+                # Get the cloud service
+                cloud_service = get_cloud_service(cloud_connector)
 
-            count += 1
+                # Call the terminate_runner function (uses the on_terminate script)
+                from app.business.runner_management import terminate_runner
 
-        # Commit the changes once after processing everything
-        session.commit()
+                # Use asyncio.run to execute the async terminate_runner function
+                result = asyncio.run(terminate_runner(runner.id))
 
-    logger.info(f"Cleanup complete. Stopped {count} runners.")
+                if result["status"] == "success":
+                    logger.info(f"Successfully terminated runner {runner.id}")
+                    count += 1
+                else:
+                    logger.error(f"Failed to terminate runner {runner.id}: {result['message']}")
+
+            except Exception as e:
+                logger.error(f"Error processing runner {runner.id}: {e!s}")
+
+                # Try to update the runner state anyway to prevent retrying forever
+                try:
+                    runner.state = "error"
+                    runner.ended_on = now
+                    session.add(runner)
+
+                    # Create a runner history record for the error
+                    event_data = {
+                        "previous_state": runner.state,
+                        "new_state": "error",
+                        "error_time": now.isoformat(),
+                        "error": str(e)
+                    }
+                    history_record = RunnerHistory(
+                        runner_id=runner.id,
+                        event_name="runner_cleanup_error",
+                        event_data=event_data,
+                        created_by="system",
+                        modified_by="system"
+                    )
+                    session.add(history_record)
+                    session.commit()
+                except Exception as inner_e:
+                    logger.error(f"Error updating runner {runner.id} state: {inner_e!s}")
+
+    logger.info(f"Cleanup complete. Processed {count} runners.")

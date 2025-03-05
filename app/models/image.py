@@ -24,8 +24,7 @@ class Image(TimestampMixin, SQLModel, table=True):
     identifier: str
     runner_pool_size: int = Field(default=1)
     machine_id: int | None = Field(default=None, foreign_key="machine.id")
-    modified_by: str | None = Field(default="")
-    created_by: str | None = Field(default="")
+    cloud_connector_id: int = Field(foreign_key="cloud_connector.id")
 
 class ImageUpdate(TimestampMixin, SQLModel):
     """Image update model."""

@@ -6,6 +6,8 @@ from sqlmodel import Session, select
 from app.db.database import engine
 from app.models import User, Machine, Image, Script
 from datetime import datetime
+from app.models import CloudConnector
+import os
 
 @dataclass
 class Resources:
@@ -38,16 +40,42 @@ def setup_resources():
             session.commit()
             session.refresh(system_user)
 
-        # 2) Fetch or create default Machine.
+
+        # 2) Fetch or create default cloud connector.
+        stmt_connector = select(CloudConnector).where(CloudConnector.provider == "aws")
+        cloud_connector = session.exec(stmt_connector).first()
+        if not cloud_connector:
+            # Get AWS credentials and region from environment variables
+            aws_access_key = os.getenv("AWS_ACCESS_KEY_ID", "")
+            aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY", "")
+            aws_region = os.getenv("AWS_REGION", "us-west-2")
+
+            cloud_connector = CloudConnector(
+                provider="aws",
+                region=aws_region,
+                created_by="system",
+                modified_by="system"
+            )
+            # Set the access_key and secret_key using the hybrid properties
+            # which will handle the encryption
+            cloud_connector.set_decrypted_access_key(aws_access_key)
+            cloud_connector.set_decrypted_secret_key(aws_secret_key)
+
+            session.add(cloud_connector)
+            session.commit()
+            session.refresh(cloud_connector)
+
+        # 3) Fetch or create default Machine.
         stmt_machine = select(Machine).where(Machine.identifier == "t2.medium")
         db_machine = session.exec(stmt_machine).first()
         if not db_machine:
             db_machine = Machine(
                 name="t2.medium",
-                identifier="t2.medium",  # Use a valid EC2 instance type here
+                identifier="t2.medium",
                 cpu_count=2,
                 memory_size=4096,
                 storage_size=20,
+                cloud_connector_id=cloud_connector.id,  # Add cloud connector reference
                 created_by="system",
                 modified_by="system"
             )
@@ -55,7 +83,7 @@ def setup_resources():
             session.commit()
             session.refresh(db_machine)
 
-        # 3) Fetch or create default Image.
+        # 4) Fetch or create default Image.
         stmt_image = select(Image).where(Image.identifier == "ami-0bbfffa970b0280da")
         db_image = session.exec(stmt_image).first()
         if not db_image:
@@ -65,6 +93,7 @@ def setup_resources():
                 identifier="ami-0bbfffa970b0280da",
                 runner_pool_size=1,  # Example pool size
                 machine_id=db_machine.id,
+                cloud_connector_id=cloud_connector.id,  # Add cloud connector reference
                 created_by="system",
                 modified_by="system"
             )
@@ -72,7 +101,7 @@ def setup_resources():
             session.commit()
             session.refresh(db_image)
 
-        # 4) Fetch or create default Script for the "on_awaiting_client" event.
+        # 5) Fetch or create default Script for the "on_awaiting_client" event.
         stmt_script = select(Script).where(Script.event == "on_awaiting_client", Script.image_id == db_image.id)
         awaiting_client_script = session.exec(stmt_script).first()
         if not awaiting_client_script:

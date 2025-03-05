@@ -18,5 +18,4 @@ class Key(TimestampMixin, SQLModel, table=True):
     key_pair_id: str = Field(nullable=False)
     key_name: str = Field(nullable=False)
     encrypted_key: str = Field(sa_column=Column(TEXT, nullable=False))
-    created_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
-    updated_at: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    cloud_connector_id: int = Field(foreign_key="cloud_connector.id")

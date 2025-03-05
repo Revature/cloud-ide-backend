@@ -50,8 +50,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
     session_start: datetime | None = None
     session_end: datetime | None = None
     ended_on: datetime | None = None
-    modified_by: str = Field(default="")
-    created_by: str = Field(default="")
+
 
     @property
     def is_alive_state(self) -> bool:

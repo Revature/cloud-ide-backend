@@ -16,8 +16,8 @@ load_dotenv()
 
 # Initialize the WorkOSClient using environment variables (or hardcode for testing)
 workos_client = WorkOSClient(
-    api_key=os.getenv("WORKOS_API_KEY"),
-    client_id=os.getenv("WORKOS_CLIENT_ID")
+    api_key=os.getenv("AUTH_API_KEY"),
+    client_id=os.getenv("AUTH_CLIENT_ID")
 )
 
 def verify_workos_token(credentials: HTTPAuthorizationCredentials = Depends(oauth2_scheme)):

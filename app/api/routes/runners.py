@@ -7,9 +7,12 @@ from datetime import datetime, timedelta
 from app.db.database import get_session
 from app.models.runner import Runner
 from app.models.runner_history import RunnerHistory
+from app.models.image import Image
 from app.schemas.runner import ExtendSessionRequest
 from app.business.runner_management import terminate_runner as terminate_runner_function
+from app.business.runner_management import launch_runners
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +100,8 @@ async def terminate_runner(
     1. Run the on_terminate script to save changes to GitHub
     2. Stop and terminate the EC2 instance
     3. Update the runner state to terminated
+
+    If the image has a runner pool, a new runner will be launched to replace this one.
     """
     # Check if the runner exists
     runner = session.get(Runner, request.runner_id)
@@ -106,6 +111,12 @@ async def terminate_runner(
             detail=f"Runner with ID {request.runner_id} not found"
         )
 
+    # Get the image to check if it has a runner pool
+    image_id = runner.image_id
+    image = session.get(Image, image_id)
+    needs_replenishing = image and image.runner_pool_size > 0
+    image_identifier = image.identifier if image else None
+
     # Call the terminate_runner function from runner_management.py
     result = await terminate_runner_function(request.runner_id)
 
@@ -114,5 +125,17 @@ async def terminate_runner(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=result["message"]
         )
+
+    # If the image has a runner pool, launch a new runner to replace this one
+    if needs_replenishing and image_identifier:
+        try:
+
+            # Launch a new runner asynchronously
+            asyncio.create_task(launch_runners(image_identifier, 1))
+            return {"status": "success", "message": "Runner terminated successfully and replacement launched"}
+        except Exception as e:
+            # If launching the replacement fails, log it but don't fail the termination
+            print(f"Error launching replacement runner: {e}")
+            return {"status": "partial_success", "message": "Runner terminated successfully but failed to launch replacement"}
 
     return {"status": "success", "message": "Runner terminated successfully"}

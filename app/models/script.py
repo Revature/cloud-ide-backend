@@ -18,8 +18,6 @@ class Script(TimestampMixin, SQLModel, table=True):
     event: str
     image_id: int = Field(foreign_key="image.id")
     script: str = Field(sa_column=Column(TEXT, nullable=False))
-    modified_by: str = Field(default="")
-    created_by: str = Field(default="")
 
 # script events
 # 1. on_create

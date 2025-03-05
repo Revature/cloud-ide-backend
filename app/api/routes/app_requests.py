@@ -14,6 +14,7 @@ from app.business.runner_management import launch_runners
 from app.business.script_management import run_script_for_runner  # Script management layer
 from app.business.jwt_creation import create_jwt_token
 import asyncio
+import os
 
 router = APIRouter()
 
@@ -63,6 +64,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
         Runner.user_id == user_obj.id
     )
     existing_runner = session.exec(stmt_runner).first()
+    domain = os.getenv("DOMAIN", "http://devide.revature.com")
 
     if existing_runner:
         if request.session_time > max_session_minutes:
@@ -90,7 +92,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
             workspace_path = "/" + workspace_path
 
         # Construct the full URL with domain, token, and workspace path
-        full_url = f"http://devide.revature.com/dest/{jwt_token}{workspace_path}"
+        full_url = f"{domain}/dest/{jwt_token}{workspace_path}"
 
         return {"url": full_url, "runner_id": str(existing_runner.id)}
 
@@ -172,7 +174,7 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
             workspace_path = "/" + workspace_path
 
         # Construct the full URL with your domain, token, and workspace path
-        full_url = f"http://devide.revature.com/dest/{jwt_token}{workspace_path}"
+        full_url = f"{domain}/dest/{jwt_token}{workspace_path}"
 
         return {"url": full_url, "runner_id": str(runner.id)}
 

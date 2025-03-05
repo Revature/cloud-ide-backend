@@ -20,8 +20,6 @@ class UserRole(TimestampMixin, SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id")
     role_id: int = Field(foreign_key="role.id")
-    modified_by: str = Field(default="")
-    created_by: str = Field(default="")
 
 def assign_role(user: user.User, role_id: int):
     """Assign a role to a user."""

@@ -22,6 +22,4 @@ class RunnerHistory(TimestampMixin, SQLModel, table=True):
         default={},
         sa_column=Column(JSON, nullable=False)
     )
-    modified_by: str = Field(default="")
-    created_by: str = Field(default="")
 
