@@ -65,8 +65,8 @@ async def get_daily_key(cloud_connector_id: int) -> Key:
             key_name=key_name,
             cloud_connector_id=cloud_connector_id,
             encrypted_key=encrypted_material,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_on=datetime.utcnow(),
+            updated_on=datetime.utcnow()
         )
         session.add(key_record)
         session.commit()
