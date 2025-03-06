@@ -4,39 +4,48 @@ on: [push]
 
 env:
   AWS_REGION: us-west-2
-  ECR_REPOSITORY: cde/monolith
-  ECR_REGISTRY: public.ecr.aws/l4a3r3t7
+  ECR_ALIAS: cde
+  ECR_REPOSITORY: monolith
 
 jobs:
     build:
         runs-on: ubuntu-latest
 
+        env:
+          RUN_DEPLOY: ${{ startsWith(github.ref_name, 'f') == true }}
+    
         steps:
             - name: Checkout
-              uses: actions/checkout@v2
+              uses: actions/checkout@v4
 
             - name: Build Docker Image
-              run: docker build --file Dockerfile --tag $ECR_REPOSITORY:latest --tag $ECR_REPOSITORY:${{ github.sha }} .
+              id: build-image
+              run: docker build --file Dockerfile\
+                   --tag ${{ env.ECR_REPOSITORY }}:latest\
+                   --tag ${{ env.ECR_REPOSITORY }}:${{ github.sha }} .
               
             - name: Configure AWS credentials
-              if: ${{ startsWith(github.ref_name, 'f') }}
-              uses: aws-actions/configure-aws-credentials@v1
+              id: aws-credentials
+              if: env.RUN_DEPLOY == 'true'
+              uses: aws-actions/configure-aws-credentials@v4
               with:
                 aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
                 aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
                 aws-region: ${{ env.AWS_REGION }}
 
-            - name: Login to Amazon ECR
-              if: ${{ startsWith(github.ref_name, 'f') }}
-              id: login-ecr
-              uses: aws-actions/amazon-ecr-login@v1
-    
-            - name: Build, tag, and push image to Amazon ECR
-              if: ${{ startsWith(github.ref_name, 'f') }}
-              id: build-image
-              run: |
-                docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
-                docker tag $ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
-                docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-                docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
-                echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" >> $GITHUB_OUTPUT
+            - name: Amazon ECR "Login" Action for GitHub Actions
+              if: env.RUN_DEPLOY == 'true'
+              id: login-ecr-public
+              uses: aws-actions/amazon-ecr-login@v2
+              with:
+                registry-type: public
+                    
+            - name: Push image to Amazon ECR
+              if: env.RUN_DEPLOY == 'true'
+              id: push-image
+              env:
+                ECR_REGISTRY: ${{ steps.login-ecr-public.outputs.registry }}
+              run: |              
+                docker push $ECR_REGISTRY/$ECR_ALIAS/$ECR_REPOSITORY:latest
+                docker push $ECR_REGISTRY/$ECR_ALIAS/$ECR_REPOSITORY:${{ github.sha }}
+                echo "image=$ECR_REGISTRY/$ECR_ALIAS/$ECR_REPOSITORY:${{ github.sha }}" >> $GITHUB_OUTPUT
