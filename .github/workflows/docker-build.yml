@@ -1,0 +1,43 @@
+name: Docker Build
+
+on: [push]
+
+env:
+  AWS_REGION: us-west-2
+  ECR_REPOSITORY: revapod/cde-monolith
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+
+            - name: Build Docker Image
+              run: docker build --file Dockerfile --tag $ECR_REPOSITORY:latest --tag $ECR_REPOSITORY:${{ github.sha }} .
+              
+            - name: Configure AWS credentials
+              if: ${{ !startsWith(github.ref_name, 'f') }}
+              uses: aws-actions/configure-aws-credentials@v1
+              with:
+                aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                aws-region: ${{ env.AWS_REGION }}
+
+            - name: Login to Amazon ECR
+              if: ${{ !startsWith(github.ref_name, 'f') }}
+              id: login-ecr
+              uses: aws-actions/amazon-ecr-login@v1
+    
+            - name: Build, tag, and push image to Amazon ECR
+              if: ${{ !startsWith(github.ref_name, 'f') }}
+              id: build-image
+              env:
+                ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+              run: |
+                docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/revapod/cde-monolith:latest
+                docker tag $ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/revapod/cde-monolith:${{ github.sha }}
+                docker push $ECR_REGISTRY/revapod/cde-monolith:latest
+                docker push $ECR_REGISTRY/revapod/cde-monolith:${{ github.sha }}
+                echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" >> $GITHUB_OUTPUT
