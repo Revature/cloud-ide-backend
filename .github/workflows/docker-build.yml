@@ -4,8 +4,8 @@ on: [push]
 
 env:
   AWS_REGION: us-east-1
-  ECR_ALIAS: cde
-  ECR_REPOSITORY: monolith
+  ECR_ALIAS: l4a3r3t7
+  ECR_REPOSITORY: cde/monolith
 
 jobs:
     build:
