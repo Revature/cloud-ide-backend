@@ -11,8 +11,8 @@ services:
     env_file:
       - .env
     volumes:
-      # - ~/.aws:/root/.aws:ro
-      - /home/ec2-user/.aws:/root/.aws:ro
+
+      - ${AWS_FOLDER}:/root/.aws:ro
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     depends_on:
       - redis
@@ -28,7 +28,7 @@ services:
       - .env
     volumes:
       # - ~/.aws:/root/.aws:ro
-      - /home/ec2-user/.aws:/root/.aws:ro
+      - ${AWS_FOLDER}:/root/.aws:ro
     command: celery -A app.celery_app.celery_app worker --loglevel=info
     depends_on:
       - redis
@@ -42,7 +42,7 @@ services:
       - .env
     volumes:
       # - ~/.aws:/root/.aws:ro
-      - /home/ec2-user/.aws:/root/.aws:ro
+      - ${AWS_FOLDER}:/root/.aws:ro
     command: celery -A app.celery_app.celery_app beat --loglevel=info
     depends_on:
       - redis
@@ -63,6 +63,8 @@ services:
       - "80:8020"
     env_file:
       - .env
+    volumes:
+     - ${CERTS_FOLDER}:/certs/
     platform: linux/amd64
     networks:
       - app-network
