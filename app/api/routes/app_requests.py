@@ -12,7 +12,9 @@ from app.models.image import Image
 from app.business.encryption import encrypt_text
 from app.business.runner_management import launch_runners
 from app.business.script_management import run_script_for_runner  # Script management layer
+from app.business.jwt_creation import create_jwt_token
 import asyncio
+import os
 
 router = APIRouter()
 
@@ -50,24 +52,49 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     if not user_obj:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
 
+    # Extract data from request
+    script_vars = request.env_data.get("script_vars", {})
+    env_vars = request.env_data.get("env_vars", {})
+    user_ip = script_vars.get("user_ip")
+
     # Check if the user already has an alive runner for the requested image.
     stmt_runner = select(Runner).where(
-        Runner.state.in_(["active", "ready"]),
+        Runner.state.in_(["active", "awaiting_client"]),  # Changed to include awaiting_client too
         Runner.image_id == request.image_id,
         Runner.user_id == user_obj.id
     )
     existing_runner = session.exec(stmt_runner).first()
-
+    domain = os.getenv("DOMAIN", "http://devide.revature.com")
 
     if existing_runner:
         if request.session_time > max_session_minutes:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Session time cannot exceed 3 hours.")
         # Update session_end for the existing runner.
         existing_runner.session_end = existing_runner.session_start + timedelta(minutes=request.session_time)
+
+        # We might want to update script_vars but not env_vars
+        # existing_runner.env_data = script_vars
+
         session.add(existing_runner)
         session.commit()
         session.refresh(existing_runner)
-        return {"url": f"http://{existing_runner.url}:3000", "runner_id": str(existing_runner.id)}
+
+        # Generate a JWT token for the existing runner
+        jwt_token = create_jwt_token(
+            runner_ip=str(existing_runner.url),
+            runner_id=existing_runner.id,
+            user_ip=user_ip
+        )
+
+        # Get the workspace path from env_data
+        workspace_path = existing_runner.env_data.get("path", "")
+        if not workspace_path.startswith("/"):
+            workspace_path = "/" + workspace_path
+
+        # Construct the full URL with domain, token, and workspace path
+        full_url = f"{domain}/dest/{jwt_token}{workspace_path}"
+
+        return {"url": full_url, "runner_id": str(existing_runner.id)}
 
     # No alive runner found; select a ready runner or launch a new one.
     if db_image.runner_pool_size == 0:
@@ -98,12 +125,17 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
 
     # Update the runner: assign the user, update environment data, and change state to "awaiting_client".
     runner.user_id = user_obj.id
-    runner.env_data = request.env_data # setting the environment data
+    # Store only script_vars in runner.env_data, not env_vars
+    runner.env_data = script_vars
     runner.state = "awaiting_client"
 
-    # Use repo_name from the script_variables. If not present, default to "project".
-    repo_name = request.env_data.get("script_variables", {}).get("repo_name", "project")
-    # Instead of updating runner.url, add a new field "path" to env_data.
+    # Store user_ip if present
+    if user_ip:
+        runner.user_ip = user_ip
+
+    # Use repo_name from script_vars. If not present, default to "project".
+    repo_name = script_vars.get("git_repo_name", "project")
+    # Add path to env_data
     runner.env_data["path"] = "/#/home/ubuntu/" + repo_name
 
     if request.session_time > max_session_minutes:
@@ -123,13 +155,27 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     if db_image.runner_pool_size != 0:
         asyncio.create_task(launch_runners(db_image.identifier, 1))
 
-    # Execute the script for the "awaiting_client" event.
+    # Execute the script for the "awaiting_client" event, passing env_vars separately
     try:
-        script_result = await run_script_for_runner("on_awaiting_client", runner.id)
+        script_result = await run_script_for_runner("on_awaiting_client", runner.id, env_vars)
         print(f"Script executed for runner {runner.id}: {script_result}")
 
-        # Construct the full URL by appending the workspace path stored in env_data["path"]
-        full_url = f"http://{runner.url}:3000{runner.env_data.get('path', '')}"
+        # Generate a JWT token for the runner
+        jwt_token = create_jwt_token(
+            runner_ip=str(runner.url),
+            runner_id=runner.id,
+            user_ip=user_ip
+        )
+
+        # Get the workspace path from env_data
+        workspace_path = runner.env_data.get("path", "")
+        # Ensure the workspace path starts with a slash
+        if not workspace_path.startswith("/"):
+            workspace_path = "/" + workspace_path
+
+        # Construct the full URL with your domain, token, and workspace path
+        full_url = f"{domain}/dest/{jwt_token}{workspace_path}"
+
         return {"url": full_url, "runner_id": str(runner.id)}
 
     except Exception as e:

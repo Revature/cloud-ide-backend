@@ -5,11 +5,12 @@ from datetime import date, datetime
 from sqlmodel import Session, select
 from app.db.database import engine
 from app.models.key import Key
-from app.business.aws import Create_New_Keypair
+from app.models.cloud_connector import CloudConnector
+from app.business.cloud_services.factory import get_cloud_service
 from app.business.encryption import encrypt_text, decrypt_text
 import os
 
-async def get_daily_key() -> Key:
+async def get_daily_key(cloud_connector_id: int) -> Key:
     """
     Check if a key already exists for today's date.
 
@@ -23,6 +24,12 @@ async def get_daily_key() -> Key:
     with Session(engine) as session:
         stmt = select(Key).where(Key.key_date == today)
         key_record = session.exec(stmt).first()
+        cloud_connector = session.get(CloudConnector, cloud_connector_id)
+        if not cloud_connector:
+            raise Exception("Cloud connector not found")
+
+        cloud_service = get_cloud_service(cloud_connector)
+
         if key_record:
             return key_record
 
@@ -31,7 +38,7 @@ async def get_daily_key() -> Key:
 
     try:
         # Attempt to create a new keypair with the key_name.
-        new_keypair = await Create_New_Keypair(KeyName=key_name)
+        new_keypair = await cloud_service.create_keypair(key_name)
     except Exception as e:
         # If the error indicates a duplicate, re-check the database.
         if "Duplicate" in str(e):
@@ -56,9 +63,10 @@ async def get_daily_key() -> Key:
             key_date=today,
             key_pair_id=new_keypair['KeyPairId'],
             key_name=key_name,
+            cloud_connector_id=cloud_connector_id,
             encrypted_key=encrypted_material,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_on=datetime.utcnow(),
+            updated_on=datetime.utcnow()
         )
         session.add(key_record)
         session.commit()

@@ -40,7 +40,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
     key_id: int | None = Field(default=None, foreign_key="key.id")
     state: str
     url: str
-    token: str
+    user_ip: str | None = None
     identifier: str
     external_hash: str
     env_data: dict[str, Any] = Field(
@@ -50,8 +50,7 @@ class Runner(TimestampMixin, SQLModel, table=True):
     session_start: datetime | None = None
     session_end: datetime | None = None
     ended_on: datetime | None = None
-    modified_by: str = Field(default="")
-    created_by: str = Field(default="")
+
 
     @property
     def is_alive_state(self) -> bool:
@@ -69,7 +68,7 @@ class RunnerUpdate(TimestampMixin, SQLModel):
     id: int
     state: str
     url: str
-    token: str
+    user_ip: str | None = None
     external_hash: str
     env_data: dict[str, Any] | None = None
     session_start: datetime | None = None

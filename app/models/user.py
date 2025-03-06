@@ -21,8 +21,6 @@ class User(TimestampMixin, SQLModel, table=True):
     first_name: str
     last_name: str
     email: str
-    modified_by: None | str = Field(default="")    #Add mechanism for these fields later?
-    created_by: None | str = Field(default="")    #Add mechanism for these fields later?
 
 class UserUpdate(TimestampMixin, SQLModel):
     """User update model."""

@@ -22,9 +22,7 @@ class Machine(TimestampMixin, SQLModel, table=True):
     cpu_count: int
     memory_size: int
     storage_size: int
-    modified_by: str = Field(default="")
-    created_by: str = Field(default="")
-
+    cloud_connector_id: int = Field(foreign_key="cloud_connector.id")
 
 class MachineUpdate(TimestampMixin, SQLModel):
     """Machine update model."""
