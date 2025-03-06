@@ -32,7 +32,7 @@ async def lifespan(app: FastAPI):
     # On shutdown: terminate all alive runners.
     await shutdown_all_runners()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, root_path="/api")
 app.include_router(api_router)
 
 @app.get("/")
