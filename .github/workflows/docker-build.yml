@@ -4,7 +4,8 @@ on: [push]
 
 env:
   AWS_REGION: us-west-2
-  ECR_REPOSITORY: revapod/cde-monolith
+  ECR_REPOSITORY: cde/monolith
+  ECR_EGISTRY: public.ecr.aws/l4a3r3t7
 
 jobs:
     build:
@@ -18,7 +19,7 @@ jobs:
               run: docker build --file Dockerfile --tag $ECR_REPOSITORY:latest --tag $ECR_REPOSITORY:${{ github.sha }} .
               
             - name: Configure AWS credentials
-              if: ${{ !startsWith(github.ref_name, 'f') }}
+              if: ${{ startsWith(github.ref_name, 'f') }}
               uses: aws-actions/configure-aws-credentials@v1
               with:
                 aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -26,18 +27,16 @@ jobs:
                 aws-region: ${{ env.AWS_REGION }}
 
             - name: Login to Amazon ECR
-              if: ${{ !startsWith(github.ref_name, 'f') }}
+              if: ${{ startsWith(github.ref_name, 'f') }}
               id: login-ecr
               uses: aws-actions/amazon-ecr-login@v1
     
             - name: Build, tag, and push image to Amazon ECR
-              if: ${{ !startsWith(github.ref_name, 'f') }}
+              if: ${{ startsWith(github.ref_name, 'f') }}
               id: build-image
-              env:
-                ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
               run: |
-                docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/revapod/cde-monolith:latest
-                docker tag $ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/revapod/cde-monolith:${{ github.sha }}
-                docker push $ECR_REGISTRY/revapod/cde-monolith:latest
-                docker push $ECR_REGISTRY/revapod/cde-monolith:${{ github.sha }}
+                docker tag $ECR_REPOSITORY:latest $ECR_REGISTRY/$ECR_REPOSITORY:latest
+                docker tag $ECR_REPOSITORY:${{ github.sha }} $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
+                docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+                docker push $ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}
                 echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:${{ github.sha }}" >> $GITHUB_OUTPUT
