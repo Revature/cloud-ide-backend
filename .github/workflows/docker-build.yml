@@ -5,7 +5,7 @@ on: [push]
 env:
   AWS_REGION: us-west-2
   ECR_REPOSITORY: cde/monolith
-  ECR_EGISTRY: public.ecr.aws/l4a3r3t7
+  ECR_REGISTRY: public.ecr.aws/l4a3r3t7
 
 jobs:
     build:
