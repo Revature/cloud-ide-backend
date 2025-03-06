@@ -12,7 +12,7 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
-          RUN_DEPLOY: ${{ startsWith(github.ref_name, 'f') == true }}
+          RUN_DEPLOY: ${{ !startsWith(github.ref_name, 'f') == true }}
     
         steps:
             - name: Checkout
