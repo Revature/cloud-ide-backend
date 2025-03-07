@@ -1,0 +1,40 @@
+import os
+from workos import WorkOSClient, exceptions
+from app.api.authentication import password_authentication
+from fastapi import APIRouter, Request, Response
+
+workos = WorkOSClient(
+    api_key=os.getenv("WORKOS_API_KEY"), 
+    client_id=os.getenv("WORKOS_CLIENT_ID")
+)
+
+router = APIRouter()
+
+class PasswordAuth:
+    email: str
+    password: str
+    ip_address: str | None
+    user_agent: str | None
+    def __init__(self, email, password):
+        self.email = email
+        self.password = password
+    
+@router.post("/machine_auth")
+def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Response):
+    
+    request.ip_address = request.client.host
+    request.user_agent = request.headers.get('User-Agent')
+    
+    try:
+        access_token = password_authentication(passwordAuth)
+        response.headers["Access-Token"] = access_token
+        response.status_code = 200
+        return '{"status": 200}'
+    except exceptions.BadRequestException:
+        response.status_code = 401
+        return '{"error": "Unauthorized: bad credentials"}'
+    except:
+        response.status_code = 500
+        return '{"error": "Internal Server Error"}'
+    
+    
