@@ -19,14 +19,14 @@ class PasswordAuth:
     user_agent: str | None
 
     def __init__(self, email, password):
-        """Initialize required params"""
+        """Initialize required params."""
         self.email = email
         self.password = password
 
 
 @router.post("/machine_auth")
 def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Response):
-    """Authenticate with username and password, receive access token in Access-Token header"""
+    """Authenticate with username and password, receive access token in Access-Token header."""
     request.ip_address = request.client.host
     request.user_agent = request.headers.get("User-Agent")
 
