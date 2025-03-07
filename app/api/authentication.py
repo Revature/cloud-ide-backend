@@ -1,4 +1,4 @@
-"""Module for checking authentication with WorkOS"""
+"""Module for checking authentication with WorkOS."""
 
 from datetime import time
 import os
@@ -12,7 +12,9 @@ workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("
 
 # Moving this behavior into a decorator to apply to routes might be best
 def token_authentication(access_token: str):
-    """Checks if access token is valid, attempts to refresh if expired. If access and refresh tokens are both invalid,
+    """Authenticate with workos access token.
+
+    Checks if access token is valid, attempts to refresh if expired. If access and refresh tokens are both invalid,
     throws a workos.exceptions.BadRequestException. Otherwise returns the access_token. Assume it is a new access token
     acquired after refreshing, and return the token to the requester.
 
@@ -25,7 +27,8 @@ def token_authentication(access_token: str):
         A newly refreshed access token, or the same access token if it was not expired.
 
     Throws:
-        workos.exceptions.BadRequestException - if the access token is expired and refresh token not valid."""
+        workos.exceptions.BadRequestException - if the access token is expired and refresh token not valid.
+    """
     # check access token
     decoded_token = decode_signed_token(access_token)
     if decoded_token.get("exp") >= int(time.time()):

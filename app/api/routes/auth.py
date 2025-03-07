@@ -1,4 +1,4 @@
-"""Authorization route for acquiring bearer tokens"""
+"""Authorization route for acquiring bearer tokens."""
 
 import os
 from workos import WorkOSClient, exceptions
@@ -11,13 +11,15 @@ router = APIRouter()
 
 
 class PasswordAuth:
+    """Auth object to carry username and password in request."""
+
     email: str
     password: str
     ip_address: str | None
     user_agent: str | None
 
     def __init__(self, email, password):
-        """Constructor for required params"""
+        """Initialize required params"""
         self.email = email
         self.password = password
 

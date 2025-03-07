@@ -1,3 +1,5 @@
+"""Module for decoding digitally signed tokens."""
+
 import os
 import jwt
 import json
