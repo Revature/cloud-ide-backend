@@ -1,4 +1,5 @@
 """Model for workOS sessions, tracks access and refresh tokens."""
+
 from sqlalchemy import Column, String
 from sqlmodel import Field, SQLModel, select
 from app.business.encryption import decrypt_text, encrypt_text
@@ -43,17 +44,20 @@ class WorkosSession(SQLModel, table=True):
         else:
             self.encrypted_access_token = ""
 
+
 def create_workos_session(workos_session: WorkosSession):
     """Create a workos_session record in the database."""
     with next(get_session()) as database_session:
         database_session.add(workos_session)
         database_session.commit()
 
+
 def get_refresh_token(access_token: str):
     """Return a refresh token for an access token."""
     with next(get_session()) as database_session:
         record = WorkosSession(database_session.exec(select(WorkosSession).where(WorkosSession.encrypted_access_token == encrypt_text(access_token))))
         return record.get_decrypted_refresh_token()
+
 
 def refresh_session(access_token: str, refresh_token: str):
     """Update a session with new access and refresh tokens."""

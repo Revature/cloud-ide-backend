@@ -1,4 +1,5 @@
 """Module for checking authentication with WorkOS"""
+
 from datetime import time
 import os
 from workos import WorkOSClient, exceptions
@@ -6,32 +7,30 @@ from app.api.routes.auth import PasswordAuth
 from app.business.pkce import decode_signed_token
 from app.models.workos_session import WorkosSession, create_workos_session, get_refresh_token, refresh_session
 
-workos = WorkOSClient(
-    api_key=os.getenv("WORKOS_API_KEY"),
-    client_id=os.getenv("WORKOS_CLIENT_ID")
-)
+workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("WORKOS_CLIENT_ID"))
+
 
 # Moving this behavior into a decorator to apply to routes might be best
 def token_authentication(access_token: str):
-    """Checks if access token is valid, attempts to refresh if expired. If access and refresh tokens are both invalid, 
+    """Checks if access token is valid, attempts to refresh if expired. If access and refresh tokens are both invalid,
     throws a workos.exceptions.BadRequestException. Otherwise returns the access_token. Assume it is a new access token
-    acquired after refreshing, and return the token to the requester. 
-    
+    acquired after refreshing, and return the token to the requester.
+
     If a refresh is performed, the workos_session table is updated with new access and refresh tokens.
-    
+
     Args:
         access_token: str - signed access token to be decoded and checked
-        
+
     Returns:
         A newly refreshed access token, or the same access token if it was not expired.
-        
+
     Throws:
         workos.exceptions.BadRequestException - if the access token is expired and refresh token not valid."""
     # check access token
     decoded_token = decode_signed_token(access_token)
-    if(decoded_token.get('exp') >= int(time.time())):
+    if decoded_token.get("exp") >= int(time.time()):
         # Try refreshing access token - this will throw a workos.exceptions.BadRequestException if it fails
-        refresh_response = workos.user_management.authenticate_with_refresh_token(refresh_token = get_refresh_token(access_token))
+        refresh_response = workos.user_management.authenticate_with_refresh_token(refresh_token=get_refresh_token(access_token))
         refresh_session(refresh_response.access_token, refresh_response.refresh_token)
         access_token = refresh_response.access_token
     return access_token
@@ -39,7 +38,7 @@ def token_authentication(access_token: str):
 
 def password_authentication(auth: PasswordAuth):
     """Authenticate with WorkOS using the password oAuth flow.
-    
+
     Args:
         auth: app.api.routes.auth.PasswordAuth object containing username, password, host, and user-agent
     Returns:
@@ -48,23 +47,13 @@ def password_authentication(auth: PasswordAuth):
         workos.exceptions.BadRequestException - if credentials are not valid
     """
     workos_auth_response = workos.user_management.authenticate_with_password(
-        email=auth.email,
-        password=auth.password,
-        ip_address=auth.ip_address,
-        user_agent=auth.user_agent
+        email=auth.email, password=auth.password, ip_address=auth.ip_address, user_agent=auth.user_agent
     )
 
     decoded_token = decode_signed_token(workos_auth_response.access_token)
-    expiration = decoded_token.get('exp')
+    expiration = decoded_token.get("exp")
 
-    workos_session = WorkosSession(
-        decoded_token.get('sid'),
-        expiration,
-        auth.ip_address,
-        auth.user_agent,
-        "",
-        ""
-        )
+    workos_session = WorkosSession(decoded_token.get("sid"), expiration, auth.ip_address, auth.user_agent, "", "")
     workos_session.set_decrypted_access_token(workos_auth_response.access_token)
     workos_session.set_decrypted_refresh_token(workos_auth_response.refresh_token)
 
