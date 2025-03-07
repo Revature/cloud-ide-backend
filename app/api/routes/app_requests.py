@@ -45,8 +45,8 @@ async def get_ready_runner(request: RunnerRequest, response: Response, session: 
     except exceptions.BadRequestException:
         response.status_code = 401
         return {"error": "Unauthorized"}
-    
-    
+
+
     max_session_minutes = 180
     # Retrieve the image record.
     stmt_image = select(Image).where(Image.id == request.image_id)
