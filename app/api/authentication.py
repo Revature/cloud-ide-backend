@@ -28,7 +28,7 @@ def verify_workos_token(credentials: HTTPAuthorizationCredentials = Depends(oaut
         profile = workos_client.sso.get_profile(access_token=token)
         return profile
     except Exception as e:
-        raise HTTPException from None(
+        raise HTTPException (
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired WorkOS token."
-        )
+        ) from None
