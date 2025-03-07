@@ -136,7 +136,7 @@ async def launch_runners(image_identifier: str, runner_count: int, initiated_by:
 
     # Log summary information instead of creating a system-level history record
     duration_seconds = (datetime.utcnow() - launch_start_time).total_seconds()
-    logger.info(f"[{initiated_by}] Launch summary: Requested: {runner_count}, Launched: {len(launched_instance_ids)}, " 
+    logger.info(f"[{initiated_by}] Launch summary: Requested: {runner_count}, Launched: {len(launched_instance_ids)}, "
                 f"Duration: {duration_seconds:.2f}s, Runner IDs: {created_runner_ids}")
 
     return launched_instance_ids
@@ -415,12 +415,12 @@ async def shutdown_all_runners():
     """
     initiated_by = "shutdown_all_runners"
     logger.info(f"[{initiated_by}] Starting shutdown of all active runners")
-    
+
     with Session(engine) as session:
         stmt = select(Runner).where(Runner.state != "terminated")
         runners_to_shutdown = session.exec(stmt).all()
         instance_ids = [runner.identifier for runner in runners_to_shutdown]
-        
+
     if instance_ids:
         logger.info(f"[{initiated_by}] Found {len(instance_ids)} runners to terminate")
         results = await shutdown_runners(instance_ids, initiated_by)

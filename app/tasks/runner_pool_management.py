@@ -22,12 +22,12 @@ def manage_runner_pool():
     Ensures the number of "ready" runners matches the configured runner_pool_size for each image.
     """
     now = datetime.utcnow()
-    
+
     # Create a unique identifier for this pool management run
     pool_run_id = f"pool_manager_{now.strftime('%Y%m%d_%H%M%S')}"
-    
+
     logger.info(f"[{pool_run_id}] Starting runner pool management task")
-    
+
     # Stats for summary
     stats = {
         "timestamp": now.isoformat(),
@@ -58,7 +58,7 @@ def manage_runner_pool():
                 "runners_terminated": 0,
                 "error": None
             }
-            
+
             # Skip images with no pool
             if image.runner_pool_size <= 0:
                 continue
@@ -67,9 +67,9 @@ def manage_runner_pool():
             stmt_ready_runners = select(Runner).where(Runner.state == "ready", Runner.image_id == image.id)
             ready_runners = session.exec(stmt_ready_runners).all()
             ready_runners_count = len(ready_runners)
-            
+
             image_stat["ready_runners_before"] = ready_runners_count
-            
+
             # 3) Compare the ready runner count with the pool size
             if ready_runners_count < image.runner_pool_size:
                 from app.business.runner_management import launch_runners
@@ -77,24 +77,24 @@ def manage_runner_pool():
                 runners_to_create = image.runner_pool_size - ready_runners_count
                 logger.info(f"[{pool_run_id}] Launching {runners_to_create} new runners for image {image.id} ({image.identifier})")
                 logger.info(f"[{pool_run_id}] Using cloud connector {cloud_connector.id}")
-                
+
                 # Log scaling decision instead of creating system-level record
                 logger.info(f"[{pool_run_id}] Scaling up image {image.id}: current={ready_runners_count}, " +
                            f"target={image.runner_pool_size}, creating={runners_to_create}")
-                
+
                 image_stat["action_taken"] = "scale_up"
                 image_stat["runners_to_create"] = runners_to_create
-                
+
                 try:
                     # Launch the new runners with the pool run ID as the initiator
                     instance_ids = asyncio.run(launch_runners(image.identifier, runners_to_create, initiated_by=pool_run_id))
-                    
+
                     # Log success instead of creating system-level record
                     logger.info(f"[{pool_run_id}] Successfully launched {len(instance_ids)} instances for image {image.id}")
-                    
+
                     stats["runners_launched"] += len(instance_ids)
                     image_stat["runners_created"] = len(instance_ids)
-                    
+
                 except Exception as e:
                     logger.error(f"[{pool_run_id}] Error launching runners for image {image.id}: {e!s}")
                     stats["errors"] += 1
@@ -105,11 +105,11 @@ def manage_runner_pool():
                 # If there are excess ready runners, terminate the extra ones
                 runners_to_terminate = ready_runners_count - image.runner_pool_size
                 logger.info(f"[{pool_run_id}] Terminating {runners_to_terminate} extra runners for image {image.id} ({image.identifier})")
-                
+
                 # Log scaling decision instead of creating system-level record
                 logger.info(f"[{pool_run_id}] Scaling down image {image.id}: current={ready_runners_count}, " +
                            f"target={image.runner_pool_size}, terminating={runners_to_terminate}")
-                
+
                 image_stat["action_taken"] = "scale_down"
                 image_stat["runners_to_terminate"] = runners_to_terminate
 
@@ -120,12 +120,12 @@ def manage_runner_pool():
                 ).order_by(Runner.created_on).limit(runners_to_terminate)
 
                 excess_runners = session.exec(stmt_excess_runners).all()
-                
+
                 # Add individual runner history records for each runner being terminated
                 # Keep these because they're runner-specific (not system-level)
                 for runner in excess_runners:
                     logger.info(f"[{pool_run_id}] Marking runner {runner.id} for termination (excess pool capacity)")
-                    
+
                     pool_terminate_record = RunnerHistory(
                         runner_id=runner.id,
                         event_name="pool_terminating_runner",
@@ -147,28 +147,28 @@ def manage_runner_pool():
                 try:
                     # Use the pool_run_id as the initiator for the termination
                     termination_results = asyncio.run(shutdown_runners(instance_ids_to_terminate, pool_run_id))
-                    
+
                     # Log success instead of creating system-level record
                     logger.info(f"[{pool_run_id}] Successfully terminated {len(instance_ids_to_terminate)} instances for image {image.id}")
-                    
+
                     stats["runners_terminated"] += len(instance_ids_to_terminate)
                     image_stat["runners_terminated"] = len(instance_ids_to_terminate)
-                    
+
                 except Exception as e:
                     logger.error(f"[{pool_run_id}] Error terminating runners for image {image.id}: {e!s}")
                     stats["errors"] += 1
                     image_stat["error"] = str(e)
-            
+
             stats["images_processed"] += 1
             stats["image_stats"].append(image_stat)
 
     # Add completion information to the stats
     stats["duration_seconds"] = (datetime.utcnow() - now).total_seconds()
     stats["completion_time"] = datetime.utcnow().isoformat()
-    
+
     # Log the summary instead of creating a system record
-    logger.info(f"[{pool_run_id}] Runner pool management task completed. Summary: Processed {stats['images_processed']} images, " 
+    logger.info(f"[{pool_run_id}] Runner pool management task completed. Summary: Processed {stats['images_processed']} images, "
                 f"launched {stats['runners_launched']} runners, terminated {stats['runners_terminated']} runners, "
                 f"encountered {stats['errors']} errors. Duration: {stats['duration_seconds']:.2f} seconds.")
-    
+
     return stats

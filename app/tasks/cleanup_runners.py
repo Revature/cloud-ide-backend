@@ -20,12 +20,12 @@ logger = get_task_logger(__name__)
 def cleanup_active_runners():
     """Task to cleanup active runners whose session_end has passed."""
     now = datetime.utcnow()
-    
+
     # Identifier for this specific cleanup run
     cleanup_run_id = f"cleanup_job_{now.strftime('%Y%m%d_%H%M%S')}"
-    
+
     logger.info(f"[{cleanup_run_id}] Starting cleanup of active runners whose session_end has passed")
-    
+
     with Session(engine) as session:
         # Query all runners that are active and whose session_end is in the past
         results = session.exec(
@@ -37,10 +37,10 @@ def cleanup_active_runners():
 
         # Log summary of found expired runners
         logger.info(f"[{cleanup_run_id}] Found {len(results)} expired runners to terminate")
-        
+
         count_success = 0
         count_error = 0
-        
+
         for runner in results:
             logger.info(f"[{cleanup_run_id}] Processing expired runner {runner.id} (instance {runner.identifier})")
 
@@ -57,7 +57,7 @@ def cleanup_active_runners():
                     logger.error(f"[{cleanup_run_id}] Cloud connector not found for image {image.id}")
                     count_error += 1
                     continue
-                
+
                 # Add a specific history record for this runner before termination to show it was expired
                 expiry_record = RunnerHistory(
                     runner_id=runner.id,
@@ -123,7 +123,7 @@ def cleanup_active_runners():
     duration_seconds = (datetime.utcnow() - now).total_seconds()
     logger.info(f"[{cleanup_run_id}] Cleanup complete. Successfully terminated: {count_success}, Errors: {count_error}, "
                 f"Duration: {duration_seconds:.2f} seconds")
-    
+
     # Return a summary dictionary for Celery task results
     return {
         "cleanup_job_id": cleanup_run_id,

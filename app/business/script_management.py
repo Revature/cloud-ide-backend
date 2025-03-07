@@ -35,7 +35,12 @@ def get_runner_key(runner_key_id: int) -> str:
     # Decrypt the key using the master encryption key.
     return decrypt_text(key_record.encrypted_key)
 
-async def run_script_for_runner(event: str, runner_id: int, env_vars: Optional[dict[str, Any]] = None, initiated_by: str = "system") -> dict[str, str]:
+async def run_script_for_runner(
+    event: str,
+    runner_id: int,
+    env_vars: Optional[dict[str, Any]] = None,
+    initiated_by: str = "system"
+) -> dict[str, str]:
     """
     Run scripts on runner based on event hook.
 
@@ -54,12 +59,12 @@ async def run_script_for_runner(event: str, runner_id: int, env_vars: Optional[d
     """
     from app.models.runner_history import RunnerHistory
     from celery.utils.log import get_task_logger
-    
+
     logger = get_task_logger(__name__)
     script_start_time = datetime.utcnow()
-    
+
     logger.info(f"[{initiated_by}] Starting script execution '{event}' for runner {runner_id}")
-    
+
     # Create a new session for lookup.
     with Session(engine) as session:
         runner = session.get(Runner, runner_id)
@@ -111,7 +116,7 @@ async def run_script_for_runner(event: str, runner_id: int, env_vars: Optional[d
 
         # Render the script template using the context
         rendered_script = render_script(script_record.script, template_context)
-        
+
         logger.info(f"[{initiated_by}] Rendered script for '{event}' on runner {runner_id}")
 
     try:
@@ -127,22 +132,22 @@ async def run_script_for_runner(event: str, runner_id: int, env_vars: Optional[d
                 raise Exception("Cloud connector not found")
 
             cloud_service = get_cloud_service(cloud_connector)
-            
+
             logger.info(f"[{initiated_by}] Executing script '{event}' on runner {runner_id} via SSH")
             result = await cloud_service.ssh_run_script(runner.url, private_key, rendered_script)
-            
+
             # Record the script execution result
             execution_duration = (datetime.utcnow() - script_start_time).total_seconds()
-            
+
             # Extract non-sensitive output data for logging
             sanitized_result = {
                 "exit_code": result.get("exit_code", None),
                 "success": result.get("success", False),
                 "duration_seconds": execution_duration
             }
-            
+
             logger.info(f"[{initiated_by}] Script '{event}' on runner {runner_id} completed with status: {sanitized_result}")
-            
+
             # Create a script result history record
             script_result_record = RunnerHistory(
                 runner_id=runner_id,
@@ -162,16 +167,16 @@ async def run_script_for_runner(event: str, runner_id: int, env_vars: Optional[d
                 created_by=initiated_by,
                 modified_by=initiated_by
             )
-            
+
             session.add(script_result_record)
             session.commit()
-            
+
             return result
-            
+
     except Exception as e:
-        error_message = f"Error executing script '{event}' on runner {runner_id}: {str(e)}"
+        error_message = f"Error executing script '{event}' on runner {runner_id}: {e!s}"
         logger.error(f"[{initiated_by}] {error_message}")
-        
+
         # Record the script execution error
         with Session(engine) as session:
             script_error_record = RunnerHistory(
@@ -190,5 +195,5 @@ async def run_script_for_runner(event: str, runner_id: int, env_vars: Optional[d
             )
             session.add(script_error_record)
             session.commit()
-        
+
         raise Exception(error_message) from e
