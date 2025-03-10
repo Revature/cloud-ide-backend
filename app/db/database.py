@@ -19,7 +19,7 @@ def create_db_and_tables():
     from app.models import user, machine, image, runner, role, user_role, script, runner_history, key, cloud_connector, workos_session
 
     # Create any tables that don't exist.
-    #SQLModel.metadata.drop_all(engine)
+    SQLModel.metadata.drop_all(engine)
     # drop runner_history and runner tables
     # metadata = SQLModel.metadata
     # tables_to_drop = [

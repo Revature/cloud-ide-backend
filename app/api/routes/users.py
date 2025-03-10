@@ -6,7 +6,6 @@ from workos import WorkOSClient
 from app.db.database import get_session
 from app.models.user import User
 from app.schemas.user import UserCreate
-from app.api.authentication import verify_workos_token
 
 # We'll need to import Role and UserRole when creating a user.
 from app.models.role import Role
@@ -19,9 +18,9 @@ workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("
 @router.get("/", response_model=list[User])
 def read_users(session: Session = Depends(get_session)):
     """Retrieve all users."""
-    token_payload: dict = Depends(verify_workos_token)
+    # token_payload: dict = Depends(verify_workos_token)
     # print the payload
-    print(token_payload)
+    # print(token_payload)
     users = session.exec(select(User)).all()
     return users
 
@@ -50,7 +49,7 @@ def create_user(user_create: UserCreate, response: Response, session: Session = 
             "first_name": user.first_name,
             "last_name": user.last_name,
         }
-        user.id = workos.user_management.create_user(**create_user_payload).id
+        user.workos_id = workos.user_management.create_user(**create_user_payload).id
     except Exception:
         response.status_code(500)
         return {"error": "Server Error"}
