@@ -54,7 +54,7 @@ def create_user(user_create: UserCreate, response: Response, session: Session = 
     except Exception:
         response.status_code(500)
         return {"error": "Server Error"}
-    
+
     session.add(user)
     session.commit()
     session.refresh(user)
