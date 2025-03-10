@@ -1,7 +1,8 @@
 """Users API routes."""
-
-from fastapi import APIRouter, Depends, HTTPException, status
+import os
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlmodel import Session, select
+from workos import WorkOSClient
 from app.db.database import get_session
 from app.models.user import User
 from app.schemas.user import UserCreate
@@ -12,6 +13,8 @@ from app.models.role import Role
 from app.models.user_role import UserRole
 
 router = APIRouter()
+
+workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("WORKOS_CLIENT_ID"))
 
 @router.get("/", response_model=list[User])
 def read_users(session: Session = Depends(get_session)):
@@ -34,10 +37,24 @@ def read_user(user_id: int, session: Session = Depends(get_session)):
     return user
 
 @router.post("/", response_model=User)
-def create_user(user_create: UserCreate, session: Session = Depends(get_session)):
+def create_user(user_create: UserCreate, response: Response, session: Session = Depends(get_session)):
     """Create a new user, reutrn the new user."""
     # Create a new User instance from the UserCreate data.
     user = User(**user_create.model_dump(), created_by="system", modified_by="system")
+    password = user_create.model_dump(include='password').get('password')
+
+    try:
+        create_user_payload = {
+            "email": user.email,
+            "password": password,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        }
+        user.id = workos.user_management.create_user(**create_user_payload).id
+    except Exception:
+        response.status_code(500)
+        return {"error": "Server Error"}
+    
     session.add(user)
     session.commit()
     session.refresh(user)
