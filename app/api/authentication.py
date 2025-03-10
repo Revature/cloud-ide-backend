@@ -1,14 +1,25 @@
 """Module for checking authentication with WorkOS."""
-
 from datetime import time
 import os
-from workos import WorkOSClient, exceptions
-from app.api.routes.auth import PasswordAuth
+from workos import WorkOSClient
 from app.business.pkce import decode_signed_token
 from app.models.workos_session import WorkosSession, create_workos_session, get_refresh_token, refresh_session
 
 workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("WORKOS_CLIENT_ID"))
 
+# Copied from app.api.routes.auth.py as a quick fix for now.
+class PasswordAuth:
+    """Auth object to carry username and password in request."""
+
+    email: str
+    password: str
+    ip_address: str | None
+    user_agent: str | None
+
+    def __init__(self, email, password):
+        """Initialize required params."""
+        self.email = email
+        self.password = password
 
 # Moving this behavior into a decorator to apply to routes might be best
 def token_authentication(access_token: str):
