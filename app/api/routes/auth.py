@@ -33,11 +33,11 @@ def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Respons
     try:
         access_token = password_authentication(passwordAuth)
         response.headers["Access-Token"] = access_token
-        # response.status_code = 200
+        response.status_code = 200
         return '{"status": 200}'
     except exceptions.BadRequestException:
-        # response.status_code = 401
+        response.status_code = 401
         return '{"error": "Unauthorized: bad credentials"}'
     except Exception:
-        # response.status_code = 500
+        response.status_code = 500
         return '{"error": "Internal Server Error"}'
