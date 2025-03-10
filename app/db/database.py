@@ -16,7 +16,7 @@ engine = create_engine(DATABASE_URL, echo=True)
 def create_db_and_tables():
     """Create the database and tables if they don't already exist."""
     # Import all models so that they are registered with SQLModel metadata.
-    from app.models import user, machine, image, runner, role, user_role, script, runner_history, key, cloud_connector
+    from app.models import user, machine, image, runner, role, user_role, script, runner_history, key, cloud_connector, workos_session
 
     # Create any tables that don't exist.
     #SQLModel.metadata.drop_all(engine)

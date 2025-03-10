@@ -1,15 +1,15 @@
 """Application request handling API routes."""
-
-from fastapi import APIRouter, Depends, HTTPException, status
+from workos import exceptions
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlmodel import Session, select
 from pydantic import BaseModel
 from typing import Any
 from datetime import datetime, timedelta
+from app.api.authentication import token_authentication
 from app.db.database import get_session, engine
 from app.models.runner import Runner
 from app.models.user import User
 from app.models.image import Image
-from app.business.encryption import encrypt_text
 from app.business.runner_management import launch_runners
 from app.business.script_management import run_script_for_runner  # Script management layer
 from app.business.jwt_creation import create_jwt_token
@@ -24,11 +24,12 @@ class RunnerRequest(BaseModel):
     image_id: int
     env_data: dict[str, Any]
     user_email: str
+    access_token: str
     session_time: int  # in minutes, limit to 3 hours
     runner_type: str   # temporary/permanent
 
 @router.post("/", response_model=dict[str, str])
-async def get_ready_runner(request: RunnerRequest, session: Session = Depends(get_session)):
+async def get_ready_runner(request: RunnerRequest, response: Response, session: Session = Depends(get_session)):
     """
     Retrieve a runner with the "ready" state for the given image and assign it to a user.
 
@@ -39,6 +40,13 @@ async def get_ready_runner(request: RunnerRequest, session: Session = Depends(ge
     and the URL is returned. Also, the appropriate script is executed for the
     "on_awaiting_client" event.
     """
+    try:
+        response.headers['Access-Token'] = token_authentication(request.access_token)
+    except exceptions.BadRequestException:
+        response.status_code = 401
+        return {"error": "Unauthorized"}
+
+
     max_session_minutes = 180
     # Retrieve the image record.
     stmt_image = select(Image).where(Image.id == request.image_id)
