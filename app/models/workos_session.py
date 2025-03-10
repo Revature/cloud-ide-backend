@@ -15,7 +15,7 @@ class WorkosSession(SQLModel, table=True):
     ip_address: str = Field()
     user_agent: str = Field()
     encrypted_refresh_token: str = Field(sa_column=Column("refresh_token", String(255)))
-    encrypted_access_token: str = Field(index=True, sa_column=Column(Text, "access_token"))
+    encrypted_access_token: str = Field(sa_column=Column( "access_token", Text)) #Need to index, can't use index=true with sa_column
 
     def get_decrypted_refresh_token(self) -> str:
         """Return the decrypted refresh token."""

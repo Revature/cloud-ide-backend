@@ -17,10 +17,11 @@ from app.models import role, user_role
 class User(TimestampMixin, SQLModel, table=True):
     """User model for the application."""
 
-    id: str | None = Field(default=None, primary_key=True) # WorkOS ID
+    id: int | None = Field(default=None, primary_key=True) # WorkOS ID
     first_name: str
     last_name: str
     email: str
+    workos_id: str | None = None
 
 class UserUpdate(TimestampMixin, SQLModel):
     """User update model."""
