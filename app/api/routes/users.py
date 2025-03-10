@@ -50,9 +50,9 @@ def create_user(user_create: UserCreate, response: Response, session: Session = 
             "last_name": user.last_name,
         }
         user.workos_id = workos.user_management.create_user(**create_user_payload).id
-    except Exception:
-        response.status_code(500)
-        return {"error": "Server Error"}
+    except Exception as e:
+        response.status_code = 500
+        return e
 
     session.add(user)
     session.commit()
