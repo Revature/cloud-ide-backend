@@ -1,5 +1,4 @@
 """Authorization route for acquiring bearer tokens."""
-
 import os
 from workos import WorkOSClient, exceptions
 from app.api.authentication import password_authentication
