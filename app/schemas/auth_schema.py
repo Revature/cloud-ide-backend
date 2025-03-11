@@ -6,5 +6,5 @@ class PasswordAuth(BaseModel):
 
     email: str
     password: str
-    ip_address: str | None
-    user_agent: str | None
+    ip_address: str | None = None
+    user_agent: str | None = None
