@@ -3,7 +3,7 @@ import os
 from workos import WorkOSClient, exceptions
 from app.api.authentication import password_authentication
 from app.schemas.auth_schema import PasswordAuth
-from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi import APIRouter, Request, Response, status
 
 workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("WORKOS_CLIENT_ID"))
 
