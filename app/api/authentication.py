@@ -1,5 +1,5 @@
 """Module for checking authentication with WorkOS."""
-from datetime import time
+import time
 import os
 from workos import WorkOSClient
 from app.business.pkce import decode_signed_token
@@ -36,7 +36,6 @@ def token_authentication(access_token: str):
         access_token = refresh_response.access_token
     return access_token
 
-
 def password_authentication(auth: PasswordAuth):
     """Authenticate with WorkOS using the password oAuth flow.
 
@@ -51,14 +50,17 @@ def password_authentication(auth: PasswordAuth):
         email=auth.email, password=auth.password, ip_address=auth.ip_address, user_agent=auth.user_agent
     )
 
-    # decoded_token = decode_signed_token(workos_auth_response.access_token)
-    # expiration = decoded_token.get("exp")
 
-    # workos_session = WorkosSession(decoded_token.get("sid"), expiration, auth.ip_address, auth.user_agent, "", "")
+    print("\n\nDebug - prints go to stdout\n\n")
+
+    decoded_token = decode_signed_token(workos_auth_response.access_token)
+    expiration = decoded_token.get("exp")
+
+    workos_session = WorkosSession(decoded_token.get("sid"), expiration, auth.ip_address, auth.user_agent, "", "")
     # workos_session.set_decrypted_access_token(workos_auth_response.access_token)
     # workos_session.set_decrypted_refresh_token(workos_auth_response.refresh_token)
 
     # store the session in the database
-    # create_workos_session(workos_session)
+    create_workos_session(workos_session)
 
     return workos_auth_response.access_token

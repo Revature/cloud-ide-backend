@@ -24,7 +24,7 @@ def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Respons
     except exceptions.BadRequestException as e:
         return {
             "status": "error",
-            "code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "code": status.HTTP_401_UNAUTHORIZED,
             "error": str(e),
             "error_type": type(e).__name__
         }
