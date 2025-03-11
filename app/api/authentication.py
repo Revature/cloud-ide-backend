@@ -29,7 +29,7 @@ def token_authentication(access_token: str):
     """
     # check access token
     decoded_token = decode_signed_token(access_token)
-    if decoded_token.get("exp") >= int(time.time()):
+    if decoded_token.get("exp") <= int(time.time()):
         # Try refreshing access token - this will throw a workos.exceptions.BadRequestException if it fails
         refresh_response = workos.user_management.authenticate_with_refresh_token(refresh_token=get_refresh_token(access_token))
         refresh_session(refresh_response.access_token, refresh_response.refresh_token)
