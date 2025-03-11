@@ -5,11 +5,11 @@ from sqlmodel import Session, select
 from pydantic import BaseModel
 from typing import Any
 from datetime import datetime, timedelta
+from app.api.authentication import token_authentication
 from app.db.database import get_session, engine
 from app.models.runner import Runner
 from app.models.user import User
 from app.models.image import Image
-from app.business.encryption import encrypt_text
 from app.business.runner_management import launch_runners
 from app.business.script_management import run_script_for_runner  # Script management layer
 from app.business.jwt_creation import create_jwt_token
@@ -29,7 +29,7 @@ class RunnerRequest(BaseModel):
     runner_type: str   # temporary/permanent
 
 @router.post("/", response_model=dict[str, str])
-async def get_ready_runner(request: RunnerRequest, session: Session = Depends(get_session)):
+async def get_ready_runner(request: RunnerRequest, response: Response, session: Session = Depends(get_session)):
     """
     Retrieve a runner with the "ready" state for the given image and assign it to a user.
 
