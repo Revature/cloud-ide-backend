@@ -24,6 +24,6 @@ def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Respons
     except exceptions.BadRequestException:
         response.status_code = 401
         return '{"error": "Unauthorized: bad credentials"}'
-    except Exception:
+    except Exception as e:
         response.status_code = 500
-        return '{"error": "Internal Server Error"}'
+        return e # TODO Remove me and return something obscure
