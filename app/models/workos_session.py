@@ -11,9 +11,9 @@ class WorkosSession(SQLModel, table=True):
     __tablename__ = "workos_session"
 
     session_id: str = Field(primary_key=True)
-    expiration: int = Field()
-    ip_address: str = Field()
-    user_agent: str = Field()
+    expiration: int
+    ip_address: str
+    user_agent: str
     encrypted_refresh_token: str = Field(sa_column=Column("refresh_token", String(255)))
     encrypted_access_token: str = Field(sa_column=Column( "access_token", Text)) #Need to index, can't use index=true with sa_column
 

@@ -17,7 +17,7 @@ from app.models import role, user_role
 class User(TimestampMixin, SQLModel, table=True):
     """User model for the application."""
 
-    id: int | None = Field(default=None, primary_key=True) # WorkOS ID
+    id: int | None = Field(default=None, primary_key=True)
     first_name: str
     last_name: str
     email: str
