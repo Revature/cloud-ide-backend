@@ -16,7 +16,6 @@ def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Respons
     passwordAuth.user_agent = request.headers.get("User-Agent")
 
 
-
     try:
         access_token = password_authentication(passwordAuth)
         response.headers["Access-Token"] = access_token
