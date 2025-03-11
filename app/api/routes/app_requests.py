@@ -24,7 +24,7 @@ class RunnerRequest(BaseModel):
     image_id: int
     env_data: dict[str, Any]
     user_email: str
-    # access_token: str = Header(..., alias="Access-Token")
+    access_token: str = Header(..., alias="Access-Token")
     session_time: int  # in minutes, limit to 3 hours
     runner_type: str   # temporary/permanent
 
@@ -40,11 +40,11 @@ async def get_ready_runner(request: RunnerRequest, response: Response, session: 
     and the URL is returned. Also, the appropriate script is executed for the
     "on_awaiting_client" event.
     """
-    # try:
-    #     response.headers['Access-Token'] = token_authentication(request.access_token)
-    # except exceptions.BadRequestException:
-    #     response.status_code = 401
-    #     return {"error": "Unauthorized"}
+    try:
+        response.headers['Access-Token'] = token_authentication(request.access_token)
+    except exceptions.BadRequestException:
+        response.status_code = 401
+        return {"error": "Unauthorized"}
 
     max_session_minutes = 180
     # Retrieve the image record.
