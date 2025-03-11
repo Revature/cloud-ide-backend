@@ -48,8 +48,12 @@ def create_user(user_create: UserCreate, session: Session = Depends(get_session)
         }
         user.workos_id = workos.user_management.create_user(**create_user_payload).id
     except Exception as e:
-        raise HTTPException(status_code=500, detail="Internal Server Error..")
-        
+        return {
+            "status": "error",
+            "code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
 
     session.add(user)
     session.commit()

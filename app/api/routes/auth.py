@@ -21,8 +21,13 @@ def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Respons
         access_token = password_authentication(passwordAuth)
         response.headers["Access-Token"] = access_token
         return '{"status": 200}'
-    except exceptions.BadRequestException:
-        raise HTTPException(status_code=401, detail="Bad Request..")
+    except exceptions.BadRequestException as e:
+        return {
+            "status": "error",
+            "code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
     except Exception as e:
         # raise HTTPException(status_code=500, detail="Internal Server Error..")
         return {
