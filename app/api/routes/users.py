@@ -18,9 +18,6 @@ workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("
 @router.get("/", response_model=list[User])
 def read_users(session: Session = Depends(get_session)):
     """Retrieve all users."""
-    # token_payload: dict = Depends(verify_workos_token)
-    # print the payload
-    # print(token_payload)
     users = session.exec(select(User)).all()
     return users
 
@@ -36,7 +33,7 @@ def read_user(user_id: int, session: Session = Depends(get_session)):
     return user
 
 @router.post("/", response_model=User)
-def create_user(user_create: UserCreate, response: Response, session: Session = Depends(get_session)):
+def create_user(user_create: UserCreate, session: Session = Depends(get_session)):
     """Create a new user, reutrn the new user."""
     # Create a new User instance from the UserCreate data.
     user = User(**user_create.model_dump(), created_by="system", modified_by="system")
@@ -51,8 +48,12 @@ def create_user(user_create: UserCreate, response: Response, session: Session = 
         }
         user.workos_id = workos.user_management.create_user(**create_user_payload).id
     except Exception as e:
-        response.status_code = 500
-        return e
+        return {
+            "status": "error",
+            "code": status.HTTP_500_INTERNAL_SERVER_ERROR,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
 
     session.add(user)
     session.commit()
