@@ -51,16 +51,29 @@ def password_authentication(auth: PasswordAuth):
     )
 
 
-    print("\n\nDebug - prints go to stdout\n\n")
+    print("\n\nDebug - decoding signed token\n\n")
 
     decoded_token = decode_signed_token(workos_auth_response.access_token)
+
+    print("\n\nDebug - getting expiration\n\n")
     expiration = decoded_token.get("exp")
 
-    workos_session = WorkosSession(decoded_token.get("sid"), expiration, auth.ip_address, auth.user_agent, "", "")
-    # workos_session.set_decrypted_access_token(workos_auth_response.access_token)
-    # workos_session.set_decrypted_refresh_token(workos_auth_response.refresh_token)
+    print("\n\nDebug - creating workos session object\n\n")
+    workos_session = WorkosSession(
+        session_id = decoded_token.get("sid"),
+        expiration = expiration,
+        ip_address = auth.ip_address,
+        user_agent = auth.user_agent,
+        encrypted_refresh_token = "",
+        encrypted_access_token = ""
+        )
+    print("\n\nDebug - encrypting tokens\n\n")
+    workos_session.set_decrypted_access_token(workos_auth_response.access_token)
+    workos_session.set_decrypted_refresh_token(workos_auth_response.refresh_token)
 
     # store the session in the database
+    print("\n\nDebug - saving to db\n\n")
     create_workos_session(workos_session)
 
+    print("\n\nDebug - done with auth function\n\n")
     return workos_auth_response.access_token
