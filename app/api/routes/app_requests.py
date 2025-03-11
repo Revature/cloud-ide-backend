@@ -1,6 +1,6 @@
 """Application request handling API routes."""
 from workos import exceptions
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Header
 from sqlmodel import Session, select
 from pydantic import BaseModel
 from typing import Any
@@ -24,12 +24,16 @@ class RunnerRequest(BaseModel):
     image_id: int
     env_data: dict[str, Any]
     user_email: str
-    access_token: str
     session_time: int  # in minutes, limit to 3 hours
     runner_type: str   # temporary/permanent
 
 @router.post("/", response_model=dict[str, str])
-async def get_ready_runner(request: RunnerRequest, response: Response, session: Session = Depends(get_session)):
+async def get_ready_runner(
+    request: RunnerRequest,
+    response: Response,
+    access_token: str = Header(..., alias="Access-Token"),
+    session: Session = Depends(get_session)
+):
     """
     Retrieve a runner with the "ready" state for the given image and assign it to a user.
 
@@ -41,11 +45,10 @@ async def get_ready_runner(request: RunnerRequest, response: Response, session: 
     "on_awaiting_client" event.
     """
     try:
-        response.headers['Access-Token'] = token_authentication(request.access_token)
+        response.headers['Access-Token'] = token_authentication(access_token)
     except exceptions.BadRequestException:
         response.status_code = 401
         return {"error": "Unauthorized"}
-
 
     max_session_minutes = 180
     # Retrieve the image record.
@@ -107,7 +110,7 @@ async def get_ready_runner(request: RunnerRequest, response: Response, session: 
     # No alive runner found; select a ready runner or launch a new one.
     if db_image.runner_pool_size == 0:
         # Launch a new runner and wait for it to be ready.
-        instance_ids = await launch_runners(db_image.identifier, 1)
+        instance_ids = await launch_runners(db_image.identifier, 1, initiated_by="app_requests_endpoint_no_pool")
         instance_id = instance_ids[0]
         stmt_runner = select(Runner).where(Runner.identifier == instance_id)
         runner = session.exec(stmt_runner).first()
@@ -161,11 +164,11 @@ async def get_ready_runner(request: RunnerRequest, response: Response, session: 
 
     # Optionally, launch a new runner asynchronously to replenish the pool.
     if db_image.runner_pool_size != 0:
-        asyncio.create_task(launch_runners(db_image.identifier, 1))
+        asyncio.create_task(launch_runners(db_image.identifier, 1, initiated_by="app_requests_endpoint_pool_replenish"))
 
     # Execute the script for the "awaiting_client" event, passing env_vars separately
     try:
-        script_result = await run_script_for_runner("on_awaiting_client", runner.id, env_vars)
+        script_result = await run_script_for_runner("on_awaiting_client", runner.id, env_vars, initiated_by="app_requests_endpoint")
         print(f"Script executed for runner {runner.id}: {script_result}")
 
         # Generate a JWT token for the runner
