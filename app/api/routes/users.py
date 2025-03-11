@@ -57,7 +57,7 @@ def create_user(user_create: UserCreate, session: Session = Depends(get_session)
 
     session.add(user)
     session.commit()
-    session.refresh(user)
+
 
     # Automatically add the new user to the default user role.
     default_role = session.exec(select(Role).where(Role.name == "user")).first()
@@ -76,6 +76,8 @@ def create_user(user_create: UserCreate, session: Session = Depends(get_session)
     )
     session.add(user_role)
     session.commit()
+    session.refresh(user_role)
+    session.refresh(user)
 
     return user
 
