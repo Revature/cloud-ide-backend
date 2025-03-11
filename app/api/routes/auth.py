@@ -21,6 +21,7 @@ def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Respons
         access_token = password_authentication(passwordAuth)
         response.headers["Access-Token"] = access_token
         return '{"status": 200}'
+
     except exceptions.BadRequestException as e:
         return {
             "status": "error",
