@@ -9,7 +9,7 @@ workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("
 
 router = APIRouter()
 
-@router.post("/machine_auth", status_code=200)
+@router.post("/", status_code=200)
 def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Response):
     """Authenticate with username and password, receive access token in Access-Token header."""
     passwordAuth.ip_address = request.client.host
