@@ -26,7 +26,7 @@ def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Respons
 
     except exceptions.BadRequestException as e:
         return {
-            "status": "error",
+            "status": "BadRequestException - failed to authenticate or refresh.",
             "code": status.HTTP_401_UNAUTHORIZED,
             "error": str(e),
             "error_type": type(e).__name__
