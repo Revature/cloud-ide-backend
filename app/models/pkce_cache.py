@@ -30,7 +30,8 @@ class X5CertificateChain(SQLModel, table=True):
     fk_pkce_id: str = Field(foreign_key="pkce_cache.kid")
     x5c: str
 
-def cache_new_key_set(key_set):  
+def cache_new_key_set(key_set):
+    """Store a key set in the database."""
     with(next(get_session())) as session:
         pkce = PKCE(
             kid = key_set["kid"],
@@ -41,15 +42,15 @@ def cache_new_key_set(key_set):
             e = key_set["e"],
             x5tHashS256 = key_set["x5t#S256"]
         )
-        
+
         record = session.exec(select(PKCE)
             .where(PKCE.kid == pkce.kid))
-        
+
         if not record.first():
             session.add(pkce)
             session.commit()
             session.refresh(pkce)
-            
+
             for x5c in key_set["x5c"]:
                 cert = X5CertificateChain(
                     fk_pkce_id = pkce.kid,
@@ -58,4 +59,3 @@ def cache_new_key_set(key_set):
                 session.add(cert)
                 session.commit()
     session.close()
-    
