@@ -62,11 +62,11 @@ def get_refresh_token(access_token: str):
 
 
 
-def refresh_session(access_token: str, refresh_token: str):
+def refresh_session(old_access_token: str, access_token: str, refresh_token: str):
     """Update a session with new access and refresh tokens."""
     with next(get_session()) as database_session:
         record: WorkosSession = database_session.exec(select(WorkosSession)
-            .where(WorkosSession.encrypted_access_token == encrypt_text(access_token))).first()
+            .where(WorkosSession.encrypted_access_token == encrypt_text(old_access_token))).first()
         if not record:
             raise Exception("Session not found")
         record.set_decrypted_access_token(access_token)
