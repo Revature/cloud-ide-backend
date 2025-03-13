@@ -4,7 +4,7 @@ import os
 from workos import WorkOSClient
 from app.business.pkce import decode_signed_token
 from app.models.workos_session import WorkosSession, create_workos_session, get_refresh_token, refresh_session
-from app.schemas.auth_schema import PasswordAuth
+from app.schemas.auth_schema import WorkOSAuthDTO
 
 workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("WORKOS_CLIENT_ID"))
 
@@ -29,14 +29,17 @@ def token_authentication(access_token: str):
     """
     # check access token
     decoded_token = decode_signed_token(access_token)
-    if decoded_token.get("exp") <= int(time.time()):
+    # print("\n\nDebugging refresh tokens:")
+    # print(time.time())
+    # print(decoded_token.get("exp"))
+    if int(time.time()) >= decoded_token.get("exp"): #If time has advanced beyond expiration, need to refresh
         # Try refreshing access token - this will throw a workos.exceptions.BadRequestException if it fails
         refresh_response = workos.user_management.authenticate_with_refresh_token(refresh_token=get_refresh_token(access_token))
         refresh_session(refresh_response.access_token, refresh_response.refresh_token)
         access_token = refresh_response.access_token
     return access_token
 
-def password_authentication(auth: PasswordAuth):
+def password_authentication(auth: WorkOSAuthDTO):
     """Authenticate with WorkOS using the password oAuth flow.
 
     Args:

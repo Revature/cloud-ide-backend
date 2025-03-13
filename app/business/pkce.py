@@ -25,4 +25,4 @@ def decode_signed_token(access_token: str):
     kid = jwt.get_unverified_header(access_token)["kid"]
     key = public_keys[kid]
 
-    return jwt.decode(access_token, key=key, algorithms=["RS256"])
+    return jwt.decode(access_token, key=key, algorithms=["RS256"], options={"verify_exp": False})

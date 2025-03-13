@@ -2,9 +2,10 @@
 from sqlmodel import Field, SQLModel, Text, select, Column, String
 from app.business.encryption import decrypt_text, encrypt_text
 from app.db.database import get_session
+from app.models.mixins import TimestampMixin
 
 
-class WorkosSession(SQLModel, table=True):
+class WorkosSession(TimestampMixin, SQLModel, table=True):
     """WorkosSession Model."""
 
     __tablename__ = "workos_session"
