@@ -2,7 +2,7 @@
 import os
 from workos import WorkOSClient, exceptions
 from app.api.authentication import password_authentication
-from app.schemas.auth_schema import PasswordAuth
+from app.schemas.auth_schema import PasswordAuth, WorkOSAuthDTO
 from fastapi import APIRouter, Request, Response, status
 
 workos = WorkOSClient(api_key=os.getenv("WORKOS_API_KEY"), client_id=os.getenv("WORKOS_CLIENT_ID"))
@@ -12,12 +12,15 @@ router = APIRouter()
 @router.post("/", status_code=200)
 def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Response):
     """Authenticate with username and password, receive access token in Access-Token header."""
-    passwordAuth.ip_address = request.client.host
-    passwordAuth.user_agent = request.headers.get("User-Agent")
-
+    workos_auth_dto = WorkOSAuthDTO(
+        passwordAuth.email,
+        passwordAuth.password,
+        request.client.host,
+        request.headers.get("User-Agent")
+        )
 
     try:
-        access_token = password_authentication(passwordAuth)
+        access_token = password_authentication(workos_auth_dto)
         response.headers["Access-Token"] = access_token
         return '{"status": 200}'
 

@@ -6,5 +6,11 @@ class PasswordAuth(BaseModel):
 
     email: str
     password: str
-    ip_address: str | None = None
-    user_agent: str | None = None
+
+class WorkOSAuthDTO(BaseModel):
+    """Work OS Auth object to carry username and password plus optional params."""
+
+    email: str
+    password: str
+    ip_address: str = ""
+    user_agent: str = ""
