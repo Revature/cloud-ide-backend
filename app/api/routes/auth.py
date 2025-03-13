@@ -13,10 +13,10 @@ router = APIRouter()
 def machine_auth(request: Request, passwordAuth: PasswordAuth, response: Response):
     """Authenticate with username and password, receive access token in Access-Token header."""
     workos_auth_dto = WorkOSAuthDTO(
-        passwordAuth.email,
-        passwordAuth.password,
-        request.client.host,
-        request.headers.get("User-Agent")
+        email = passwordAuth.email,
+        password = passwordAuth.password,
+        ip_address = request.client.host,
+        user_agent = request.headers.get("User-Agent")
         )
 
     try:
